@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Preview — LocalKit</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>📝</text></svg>" />
+  <style>
+    /* ── CSS Custom Properties ────────────────────────────────── */
+    :root {
+      --bg-base:        #1e1e1e;
+      --bg-panel:       #252526;
+      --bg-card:        #2d2d2d;
+      --bg-card-hover:  #333334;
+      --bg-input:       #1e1e1e;
+      --bg-header:      #323233;
+      --border:         #3e3e3e;
+      --border-focus:   #007acc;
+      --text-primary:   #d4d4d4;
+      --text-secondary: #9d9d9d;
+      --text-muted:     #6b6b6b;
+      --accent-blue:    #007acc;
+      --accent-green:   #4ec9b0;
+      --accent-orange:  #ce9178;
+      --accent-red:     #f44747;
+      --accent-yellow:  #dcdcaa;
+      --radius:         6px;
+      --radius-sm:      4px;
+      --font-ui:        -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono:      'Cascadia Code', 'Fira Code', 'Consolas', 'Menlo', monospace;
+      --transition:     140ms ease;
+      --header-h:       48px;
+      --actionbar-h:    48px;
+      --statusbar-h:    30px;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:        #f5f5f5;
+      --bg-panel:       #ececec;
+      --bg-card:        #ffffff;
+      --bg-card-hover:  #f0f0f0;
+      --bg-input:       #ffffff;
+      --bg-header:      #e0e0e0;
+      --border:         #cccccc;
+      --border-focus:   #0066b8;
+      --text-primary:   #1e1e1e;
+      --text-secondary: #555555;
+      --text-muted:     #888888;
+      --accent-blue:    #0066b8;
+      --accent-green:   #1a8a76;
+      --accent-orange:  #a0522d;
+      --accent-red:     #cc0000;
+      --accent-yellow:  #7a6800;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .app-header {
+      height: var(--header-h);
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .app-header__back {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color var(--transition);
+    }
+    .app-header__back:hover { color: var(--text-primary); }
+
+    .app-header__sep { color: var(--text-muted); font-size: 13px; }
+
+    .app-header__title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* ── Action Bar ───────────────────────────────────────────── */
+    .action-bar {
+      height: var(--actionbar-h);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-group--right {
+      margin-left: auto;
+      gap: 8px;
+    }
+
+    .action-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-card-hover); border-color: #555; }
+
+    .btn--primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+    .btn--primary:hover { background: #0088e0; border-color: #0088e0; }
+
+    .btn--danger { color: var(--accent-red); border-color: #5a2020; }
+    .btn--danger:hover { background: rgba(244,71,71,0.12); border-color: var(--accent-red); }
+
+    .btn--copy {
+      font-size: 11px;
+      height: 24px;
+      padding: 0 10px;
+    }
+    .btn--copy.btn--copied {
+      background: rgba(78, 201, 176, 0.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* Word-wrap toggle button — active state */
+    .btn--active {
+      background: rgba(0, 122, 204, 0.18);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* ── Mode/Layout Select ───────────────────────────────────── */
+    .mode-label { font-size: 12px; color: var(--text-muted); }
+
+    .mode-select {
+      height: 28px;
+      padding: 0 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      outline: none;
+    }
+    .mode-select:focus { border-color: var(--border-focus); }
+
+    /* ── Workspace ────────────────────────────────────────────── */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Panels (split) ───────────────────────────────────────── */
+    .panels {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel + .panel { border-left: 1px solid var(--border); }
+
+    .panel__header {
+      height: 36px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .panel__hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    /* ── Editor Textarea ──────────────────────────────────────── */
+    .md-input {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+      tab-size: 2;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      overflow-y: auto;
+    }
+    .md-input::placeholder { color: var(--text-muted); }
+
+    /* Word-wrap OFF state */
+    .md-input--nowrap {
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+    }
+
+    /* ── Preview Panel ────────────────────────────────────────── */
+    .panel--preview {
+      overflow-y: auto;
+    }
+
+    /* ── Prose Typography (.md-body) ──────────────────────────── */
+    .md-body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      padding: 24px 28px;
+    }
+
+    .md-body > * + * { margin-top: 1em; }
+
+    /* Headings */
+    .md-body h1,
+    .md-body h2,
+    .md-body h3,
+    .md-body h4,
+    .md-body h5,
+    .md-body h6 {
+      font-weight: 700;
+      line-height: 1.3;
+      margin-top: 1.4em;
+      margin-bottom: 0.4em;
+      color: var(--text-primary);
+    }
+
+    .md-body h1,
+    .md-body h2 {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    .md-body h1 { font-size: 2em; }
+    .md-body h2 { font-size: 1.5em; }
+    .md-body h3 { font-size: 1.25em; }
+    .md-body h4 { font-size: 1.1em; }
+    .md-body h5 { font-size: 1em; }
+    .md-body h6 { font-size: 0.9em; color: var(--text-secondary); }
+
+    /* Paragraph */
+    .md-body p { margin: 0.75em 0; }
+
+    /* Inline code */
+    .md-body code {
+      background: var(--bg-card);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      color: var(--accent-orange);
+    }
+
+    /* Fenced code block */
+    .md-body pre {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      overflow-x: auto;
+      margin: 0.75em 0;
+      position: relative;
+    }
+
+    .md-body pre code {
+      background: none;
+      padding: 0;
+      font-size: 13px;
+      color: var(--text-primary);
+      border-radius: 0;
+    }
+
+    .code-lang {
+      font-size: 10px;
+      font-family: var(--font-ui);
+      color: var(--text-muted);
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      text-transform: lowercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Blockquote */
+    .md-body blockquote {
+      border-left: 3px solid var(--accent-blue);
+      margin: 0.75em 0;
+      padding: 4px 16px;
+      color: var(--text-secondary);
+    }
+
+    .md-body blockquote > * + * { margin-top: 0.5em; }
+
+    /* Lists */
+    .md-body ul,
+    .md-body ol {
+      margin: 0.75em 0;
+      padding-left: 1.6em;
+    }
+
+    .md-body li { margin: 0.25em 0; }
+    .md-body li > ul,
+    .md-body li > ol { margin: 0.25em 0; }
+
+    /* Tables */
+    .md-body table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 0.75em 0;
+      font-size: 14px;
+    }
+
+    .md-body th,
+    .md-body td {
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .md-body th {
+      background: var(--bg-card);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .md-body tbody tr:nth-child(even) {
+      background: rgba(127,127,127,0.06);
+    }
+
+    /* Links */
+    .md-body a {
+      color: var(--accent-green);
+      text-decoration: none;
+    }
+    .md-body a:hover { text-decoration: underline; }
+
+    /* Images */
+    .md-body img {
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Horizontal rule */
+    .md-body hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5em 0;
+    }
+
+    /* Strong / Em / Del */
+    .md-body strong { font-weight: 700; color: var(--text-primary); }
+    .md-body em     { font-style: italic; }
+    .md-body del    { text-decoration: line-through; color: var(--text-secondary); }
+
+    /* Placeholder (empty state) */
+    .md-placeholder {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 14px;
+      padding: 24px 28px;
+    }
+
+    /* ── Status Bar ───────────────────────────────────────────── */
+    .status-bar {
+      height: var(--statusbar-h);
+      background: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 16px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .status-bar__stat { opacity: 0.9; }
+    .status-bar__sep  { margin: 0 10px; opacity: 0.5; }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .panels { flex-direction: column; }
+      .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
+      .action-bar { gap: 4px; padding: 0 10px; }
+      .btn { padding: 0 8px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <a href="../index.html" class="app-header__back">🧰 LocalKit</a>
+    <span class="app-header__sep">/</span>
+    <span class="app-header__title">📝 Markdown Preview</span>
+    <div style="flex:1"></div>
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 140ms ease;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- ══ ACTION BAR ══════════════════════════════════════════════ -->
+  <div class="action-bar">
+
+    <!-- Left actions -->
+    <div class="action-group">
+      <button class="btn btn--primary" id="btn-copy-html" title="Copy rendered HTML (Ctrl+Shift+C)">Copy HTML</button>
+      <button class="btn" id="btn-export-html" title="Export as HTML file (Ctrl+Shift+E)">Export HTML</button>
+      <button class="btn btn--danger" id="btn-clear" title="Clear editor (Escape)">Clear</button>
+    </div>
+
+    <div class="action-sep"></div>
+
+    <!-- Right controls -->
+    <div class="action-group action-group--right">
+      <button class="btn btn--active" id="btn-word-wrap" title="Toggle word wrap">Word Wrap</button>
+      <label class="mode-label" for="layout-select">Layout:</label>
+      <select class="mode-select" id="layout-select" aria-label="Switch layout">
+        <option value="split" selected>Split</option>
+        <option value="editor">Editor only</option>
+        <option value="preview">Preview only</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- ══ WORKSPACE ════════════════════════════════════════════════ -->
+  <div class="workspace">
+
+    <div class="panels" id="panels">
+
+      <!-- ── EDITOR PANEL ─────────────────────────────────────── -->
+      <div class="panel" id="panel-editor">
+        <div class="panel__header">
+          <span class="panel__title">Markdown</span>
+          <span class="panel__hint">Type or paste Markdown</span>
+        </div>
+        <textarea
+          class="md-input"
+          id="md-input"
+          placeholder="# Hello, LocalKit&#10;&#10;Start typing Markdown here..."
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          aria-label="Markdown editor"
+        ></textarea>
+      </div>
+
+      <!-- ── PREVIEW PANEL ────────────────────────────────────── -->
+      <div class="panel panel--preview" id="panel-preview">
+        <div class="panel__header">
+          <span class="panel__title">Preview</span>
+          <button class="btn btn--copy" id="btn-copy-inline" title="Copy rendered HTML">Copy HTML</button>
+        </div>
+        <div class="md-body" id="md-preview" aria-label="Rendered preview" role="region">
+          <p class="md-placeholder">Start typing Markdown…</p>
+        </div>
+      </div>
+
+    </div><!-- /panels -->
+
+  </div><!-- /workspace -->
+
+  <!-- ══ STATUS BAR ═══════════════════════════════════════════════ -->
+  <div class="status-bar" role="status" aria-live="polite">
+    <span class="status-bar__stat" id="status-lines">0 lines</span>
+    <span class="status-bar__sep" aria-hidden="true">·</span>
+    <span class="status-bar__stat" id="status-words">0 words</span>
+    <span class="status-bar__sep" aria-hidden="true">·</span>
+    <span class="status-bar__stat" id="status-chars">0 chars</span>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ══════════════════════════════════════════════════════════════
+       UTILITY
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Escape HTML entities to prevent XSS. */
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '\u0026amp;')
+        .replace(/</g, '\u0026lt;')
+        .replace(/>/g, '\u0026gt;')
+        .replace(/"/g, '\u0026quot;');
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INLINE MARKDOWN PARSER
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Convert inline Markdown tokens to HTML.
+     * Processing order:
+     *   1. Escape HTML entities (XSS safety — must be first)
+     *   2. Extract inline code spans → placeholders
+     *   3. Images  ![alt](url)   — before links to avoid conflict
+     *   4. Links   [label](url)
+     *   5. Bold + Italic  ***text***
+     *   6. Bold  **text** / __text__
+     *   7. Italic  *text* / _text_
+     *   8. Strikethrough  ~~text~~
+     *   9. Hard line break (two trailing spaces + newline → <br>)
+     *  10. Restore inline code placeholders
+     *
+     * @param {string} text - raw Markdown inline text
+     * @returns {string} HTML string
+     */
+    function parseInline(text) {
+      // Step 1 — escape HTML entities
+      text = text
+        .replace(/&/g, '\u0026amp;')
+        .replace(/</g, '\u0026lt;')
+        .replace(/>/g, '\u0026gt;');
+
+      // Step 2 — extract inline code spans; protect from further processing
+      const codePlaceholders = [];
+      text = text.replace(/`([^`]+)`/g, (_, code) => {
+        const idx = codePlaceholders.length;
+        codePlaceholders.push('<code>' + code + '</code>');
+        return '\x00CODE' + idx + '\x00';
+      });
+
+      // Step 3 — images  ![alt](url)
+      text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) => {
+        return '<img src="' + url.trim() + '" alt="' + escHtml(alt) + '" />';
+      });
+
+      // Step 4 — links  [label](url)
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+        return '<a href="' + url.trim() + '" target="_blank" rel="noopener">' + label + '</a>';
+      });
+
+      // Step 5 — bold + italic  ***text***
+      text = text.replace(/\*{3}(.+?)\*{3}/g, '<strong><em>$1</em></strong>');
+
+      // Step 6 — bold  **text**  or  __text__
+      text = text.replace(/\*{2}(.+?)\*{2}/g, '<strong>$1</strong>');
+      text = text.replace(/_{2}(.+?)_{2}/g,   '<strong>$1</strong>');
+
+      // Step 7 — italic  *text*  or  _text_  (avoid mid-word underscores)
+      text = text.replace(/\*([^*\n]+?)\*/g,  '<em>$1</em>');
+      text = text.replace(/(^|[\s>(,])_([^_\n]+?)_([\s<),.]|$)/g, '$1<em>$2</em>$3');
+
+      // Step 8 — strikethrough  ~~text~~
+      text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+      // Step 9 — hard line break (two+ trailing spaces before newline)
+      text = text.replace(/  +\n/g, '<br>\n');
+
+      // Step 10 — restore inline code placeholders
+      text = text.replace(/\x00CODE(\d+)\x00/g, (_, i) => codePlaceholders[+i]);
+
+      return text;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BLOCK MARKDOWN PARSER
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Parse an array of source lines into HTML, handling all block-level
+     * Markdown constructs. Block types are detected in priority order:
+     *   1. Fenced code block  (``` lang ... ```)
+     *   2. ATX heading        (# … ######)
+     *   3. Horizontal rule    (--- / *** / ___ alone on a line)
+     *   4. Blockquote         (> lines)
+     *   5. Unordered list     (- / * / + prefix)
+     *   6. Ordered list       (N. prefix)
+     *   7. GFM table          (pipe rows with separator row)
+     *   8. Paragraph          (everything else, inline-parsed)
+     *
+     * @param {string[]} lines
+     * @returns {string} HTML string
+     */
+    function parseBlocks(lines) {
+      let html = '';
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+
+        // ── 1. Fenced code block ────────────────────────────────
+        const fenceMatch = line.match(/^(`{3,}|~{3,})(.*)/);
+        if (fenceMatch) {
+          const fence   = fenceMatch[1];
+          const lang    = fenceMatch[2].trim();
+          const content = [];
+          i++;
+          while (i < lines.length && !lines[i].startsWith(fence)) {
+            content.push(lines[i]);
+            i++;
+          }
+          i++; // skip closing fence
+          const escaped = content.join('\n')
+            .replace(/&/g, '\u0026amp;')
+            .replace(/</g, '\u0026lt;')
+            .replace(/>/g, '\u0026gt;');
+          const langBadge = lang
+            ? '<span class="code-lang">' + escHtml(lang) + '</span>'
+            : '';
+          html += '<pre>' + langBadge + '<code>' + escaped + '</code></pre>\n';
+          continue;
+        }
+
+        // ── 2. ATX Heading ──────────────────────────────────────
+        const headMatch = line.match(/^(#{1,6})\s+(.*)/);
+        if (headMatch) {
+          const level = headMatch[1].length;
+          const text  = parseInline(headMatch[2].trim());
+          html += '<h' + level + '>' + text + '</h' + level + '>\n';
+          i++;
+          continue;
+        }
+
+        // ── 3. Horizontal rule ──────────────────────────────────
+        if (/^(\*{3,}|-{3,}|_{3,})\s*$/.test(line)) {
+          html += '<hr>\n';
+          i++;
+          continue;
+        }
+
+        // ── 4. Blockquote ───────────────────────────────────────
+        if (/^>\s?/.test(line)) {
+          const bqLines = [];
+          while (i < lines.length && /^>\s?/.test(lines[i])) {
+            bqLines.push(lines[i].replace(/^>\s?/, ''));
+            i++;
+          }
+          html += '<blockquote>' + parseBlocks(bqLines) + '</blockquote>\n';
+          continue;
+        }
+
+        // ── 5. Unordered list ───────────────────────────────────
+        if (/^(\s*)([-*+])\s+/.test(line)) {
+          html += parseList(lines, i, false);
+          // advance i past all consumed list lines
+          i = parseList._nextIdx;
+          continue;
+        }
+
+        // ── 6. Ordered list ─────────────────────────────────────
+        if (/^(\s*)\d+\.\s+/.test(line)) {
+          html += parseList(lines, i, true);
+          i = parseList._nextIdx;
+          continue;
+        }
+
+        // ── 7. GFM Table ────────────────────────────────────────
+        // A table requires: header row, separator row (|---|), data rows
+        if (/\|/.test(line) && i + 1 < lines.length && /^[\s|:\-]+$/.test(lines[i + 1])) {
+          const tableResult = parseTable(lines, i);
+          if (tableResult) {
+            html += tableResult.html;
+            i = tableResult.nextIdx;
+            continue;
+          }
+        }
+
+        // ── 8. Blank line ───────────────────────────────────────
+        if (line.trim() === '') {
+          i++;
+          continue;
+        }
+
+        // ── 9. Paragraph ────────────────────────────────────────
+        const paraLines = [];
+        while (i < lines.length && lines[i].trim() !== '') {
+          // Stop at block-level markers that should not be absorbed into a paragraph
+          if (/^(#{1,6}\s|>|[-*+]\s|\d+\.\s|`{3,}|~{3,}|(\*{3,}|-{3,}|_{3,})\s*$)/.test(lines[i])) break;
+          paraLines.push(lines[i]);
+          i++;
+        }
+        if (paraLines.length) {
+          html += '<p>' + parseInline(paraLines.join('\n')) + '</p>\n';
+        }
+      }
+
+      return html;
+    }
+
+    /**
+     * Parse a list (ordered or unordered) starting at lines[startIdx].
+     * Handles nesting via indentation (2+ extra spaces = sub-list).
+     * Stores the next unconsumed line index in parseList._nextIdx.
+     *
+     * @param {string[]} lines
+     * @param {number}   startIdx
+     * @param {boolean}  ordered
+     * @returns {string} HTML string for the list
+     */
+    function parseList(lines, startIdx, ordered) {
+      const tag      = ordered ? 'ol' : 'ul';
+      const itemRx   = ordered ? /^(\s*)\d+\.\s+(.*)/ : /^(\s*)([-*+])\s+(.*)/;
+      const baseIndent = (lines[startIdx].match(/^(\s*)/)[1] || '').length;
+      let html = '<' + tag + '>\n';
+      let i    = startIdx;
+
+      while (i < lines.length) {
+        const m = lines[i].match(itemRx);
+        if (!m) break;
+
+        const indent = (m[1] || '').length;
+        if (indent < baseIndent) break;          // dedented — belongs to parent
+        if (indent > baseIndent) { i++; continue; } // deeper indent handled below
+
+        const content = ordered ? m[2] : m[3];
+        i++;
+
+        // Collect continuation lines (indented body of this item)
+        const bodyLines = [content];
+        while (i < lines.length) {
+          const next = lines[i];
+          if (next.trim() === '') { i++; bodyLines.push(''); continue; }
+          const nextIndent = (next.match(/^(\s*)/)[1] || '').length;
+          if (nextIndent <= baseIndent) break;
+          bodyLines.push(next.slice(baseIndent + 2)); // strip base+2 leading spaces
+          i++;
+        }
+
+        // Check if next item is a sub-list
+        let innerHtml = '';
+        if (i < lines.length) {
+          const subM    = lines[i].match(/^(\s*)([-*+]|\d+\.)\s+/);
+          const subIndent = subM ? (subM[1] || '').length : -1;
+          if (subIndent > baseIndent) {
+            const isOrd = /^\d+\./.test(lines[i].trimStart());
+            innerHtml  = parseList(lines, i, isOrd);
+            i          = parseList._nextIdx;
+          }
+        }
+
+        html += '<li>' + parseInline(bodyLines[0]) + innerHtml + '</li>\n';
+      }
+
+      html += '</' + tag + '>\n';
+      parseList._nextIdx = i;
+      return html;
+    }
+    parseList._nextIdx = 0; // static-like storage for next index
+
+    /**
+     * Parse a GFM pipe table starting at lines[startIdx].
+     * Returns { html, nextIdx } or null if not a valid table.
+     *
+     * @param {string[]} lines
+     * @param {number}   startIdx
+     * @returns {{ html: string, nextIdx: number } | null}
+     */
+    function parseTable(lines, startIdx) {
+      const headerLine = lines[startIdx];
+      const sepLine    = lines[startIdx + 1];
+
+      // Validate separator row: only |, -, :, space
+      if (!sepLine || !/^[\s|:\-]+$/.test(sepLine)) return null;
+
+      const splitCells = str =>
+        str.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+
+      const headers = splitCells(headerLine);
+      const sepCells = splitCells(sepLine);
+
+      // Parse alignment from separator cells
+      const aligns = sepCells.map(s => {
+        if (/^:.*:$/.test(s)) return 'center';
+        if (/^:/.test(s))     return 'left';
+        if (/:$/.test(s))     return 'right';
+        return '';
+      });
+
+      let html = '<table>\n<thead>\n<tr>\n';
+      headers.forEach((h, idx) => {
+        const align = aligns[idx] ? ' style="text-align:' + aligns[idx] + '"' : '';
+        html += '<th' + align + '>' + parseInline(h) + '</th>\n';
+      });
+      html += '</tr>\n</thead>\n<tbody>\n';
+
+      let i = startIdx + 2;
+      while (i < lines.length && /\|/.test(lines[i]) && lines[i].trim() !== '') {
+        const cells = splitCells(lines[i]);
+        html += '<tr>\n';
+        headers.forEach((_, idx) => {
+          const cell  = cells[idx] !== undefined ? cells[idx] : '';
+          const align = aligns[idx] ? ' style="text-align:' + aligns[idx] + '"' : '';
+          html += '<td' + align + '>' + parseInline(cell) + '</td>\n';
+        });
+        html += '</tr>\n';
+        i++;
+      }
+
+      html += '</tbody>\n</table>\n';
+      return { html, nextIdx: i };
+    }
+
+    /**
+     * Entry point: convert a full Markdown source string to HTML.
+     * @param {string} src - raw Markdown
+     * @returns {string} HTML string
+     */
+    function parseMarkdown(src) {
+      if (!src || !src.trim()) return '';
+      const lines = src.split('\n');
+      return parseBlocks(lines);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════════════════════════ */
+
+    const appState = {
+      layout:   'split',  // 'split' | 'editor' | 'preview'
+      wordWrap: true,
+    };
+
+    /* ══════════════════════════════════════════════════════════════
+       DOM REFS
+    ══════════════════════════════════════════════════════════════ */
+
+    const elEditor        = document.getElementById('md-input');
+    const elPreview       = document.getElementById('md-preview');
+    const elPanelEditor   = document.getElementById('panel-editor');
+    const elPanelPreview  = document.getElementById('panel-preview');
+    const elLayoutSelect  = document.getElementById('layout-select');
+    const elBtnWordWrap   = document.getElementById('btn-word-wrap');
+    const elBtnCopyHTML   = document.getElementById('btn-copy-html');
+    const elBtnCopyInline = document.getElementById('btn-copy-inline');
+    const elBtnExport     = document.getElementById('btn-export-html');
+    const elBtnClear      = document.getElementById('btn-clear');
+    const elStatusLines   = document.getElementById('status-lines');
+    const elStatusWords   = document.getElementById('status-words');
+    const elStatusChars   = document.getElementById('status-chars');
+
+    /* ══════════════════════════════════════════════════════════════
+       DEBOUNCE
+    ══════════════════════════════════════════════════════════════ */
+
+    function debounce(fn, ms) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+      };
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       RENDER PREVIEW
+    ══════════════════════════════════════════════════════════════ */
+
+    function renderPreview() {
+      const src = elEditor.value;
+      if (!src.trim()) {
+        elPreview.innerHTML = '<p class="md-placeholder">Start typing Markdown\u2026</p>';
+      } else {
+        elPreview.innerHTML = parseMarkdown(src);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STATUS BAR
+    ══════════════════════════════════════════════════════════════ */
+
+    function renderStatusBar() {
+      const src   = elEditor.value;
+      const lines = src === '' ? 0 : src.split('\n').length;
+      const words = src.trim() === '' ? 0 : src.trim().split(/\s+/).length;
+      const chars = src.length;
+      elStatusLines.textContent = lines + (lines === 1 ? ' line'  : ' lines');
+      elStatusWords.textContent = words + (words === 1 ? ' word'  : ' words');
+      elStatusChars.textContent = chars + (chars === 1 ? ' char'  : ' chars');
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       WORD WRAP TOGGLE
+    ══════════════════════════════════════════════════════════════ */
+
+    function applyWordWrap() {
+      if (appState.wordWrap) {
+        elEditor.classList.remove('md-input--nowrap');
+        elBtnWordWrap.classList.add('btn--active');
+      } else {
+        elEditor.classList.add('md-input--nowrap');
+        elBtnWordWrap.classList.remove('btn--active');
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SCROLL SYNC
+    ══════════════════════════════════════════════════════════════ */
+
+    let _scrollLock = false;
+
+    /**
+     * Proportionally sync target's scroll position to source's position.
+     * Uses a lock flag to prevent the reciprocal scroll event firing.
+     */
+    function syncScroll(source, target) {
+      if (_scrollLock) return;
+      _scrollLock = true;
+      const pct = source.scrollTop / ((source.scrollHeight - source.clientHeight) || 1);
+      target.scrollTop = pct * (target.scrollHeight - target.clientHeight);
+      // Release the lock after the current event loop tick
+      requestAnimationFrame(() => { _scrollLock = false; });
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       COPY HTML
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Copy the rendered preview HTML to clipboard.
+     * Falls back to execCommand for file:// protocol.
+     * @param {HTMLElement} btn - button element for feedback
+     */
+    function copyHTML(btn) {
+      const html = elPreview.innerHTML;
+      if (!html || html.includes('md-placeholder')) return;
+
+      const showCopied = () => {
+        btn.textContent = '\u2705 Copied!';
+        btn.classList.add('btn--copied');
+        clearTimeout(btn._copyTimer);
+        btn._copyTimer = setTimeout(() => {
+          btn.textContent = 'Copy HTML';
+          btn.classList.remove('btn--copied');
+        }, 1800);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(html).then(showCopied).catch(() => fallbackCopy(html, showCopied));
+      } else {
+        fallbackCopy(html, showCopied);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); onSuccess(); } catch (_) { /* silent */ }
+      document.body.removeChild(ta);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       EXPORT HTML
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Inline prose CSS for the standalone export file. */
+    function getProseCSS() {
+      return [
+        'body{background:#1e1e1e;margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;line-height:1.7;color:#d4d4d4}',
+        '.md-body>*+*{margin-top:1em}',
+        'h1,h2,h3,h4,h5,h6{font-weight:700;line-height:1.3;margin:1.4em 0 0.4em;color:#d4d4d4}',
+        'h1,h2{border-bottom:1px solid #3e3e3e;padding-bottom:6px}',
+        'h1{font-size:2em}h2{font-size:1.5em}h3{font-size:1.25em}h4{font-size:1.1em}h5{font-size:1em}h6{font-size:0.9em;color:#9d9d9d}',
+        'p{margin:0.75em 0}',
+        'code{background:#2d2d2d;border-radius:3px;padding:1px 5px;font-family:Consolas,Menlo,monospace;font-size:0.88em;color:#ce9178}',
+        'pre{background:#1e1e1e;border:1px solid #3e3e3e;border-radius:6px;padding:14px;overflow-x:auto;margin:0.75em 0;position:relative}',
+        'pre code{background:none;padding:0;font-size:13px;color:#d4d4d4}',
+        '.code-lang{font-size:10px;color:#6b6b6b;position:absolute;top:8px;right:10px}',
+        'blockquote{border-left:3px solid #007acc;margin:0.75em 0;padding:4px 16px;color:#9d9d9d}',
+        'ul,ol{margin:0.75em 0;padding-left:1.6em}li{margin:0.25em 0}',
+        'table{border-collapse:collapse;width:100%;margin:0.75em 0;font-size:14px}',
+        'th,td{border:1px solid #3e3e3e;padding:6px 12px;text-align:left;vertical-align:top}',
+        'th{background:#2d2d2d;font-weight:600}',
+        'tbody tr:nth-child(even){background:rgba(255,255,255,0.03)}',
+        'a{color:#4ec9b0;text-decoration:none}a:hover{text-decoration:underline}',
+        'img{max-width:100%;border-radius:4px}',
+        'hr{border:none;border-top:1px solid #3e3e3e;margin:1.5em 0}',
+        'strong{font-weight:700}em{font-style:italic}del{text-decoration:line-through;color:#9d9d9d}',
+      ].join('\n');
+    }
+
+    /**
+     * Export the rendered preview as a standalone HTML file.
+     * Wraps preview innerHTML in a complete HTML document with inlined prose CSS.
+     */
+    function exportHTML() {
+      const body  = elPreview.innerHTML;
+      if (!body || body.includes('md-placeholder')) return;
+
+      const date  = new Date().toISOString().slice(0, 10);
+      const html  = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
+        '  <meta charset="UTF-8" />\n' +
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n' +
+        '  <title>Markdown Export — ' + date + '</title>\n' +
+        '  <style>\n' + getProseCSS() + '\n  </style>\n' +
+        '</head>\n<body class="md-body">\n' + body + '\n</body>\n</html>';
+
+      const blob  = new Blob([html], { type: 'text/html' });
+      const url   = URL.createObjectURL(blob);
+      const a     = document.createElement('a');
+      a.href      = url;
+      a.download  = 'markdown-export-' + date + '.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       CLEAR
+    ══════════════════════════════════════════════════════════════ */
+
+    function handleClear() {
+      elEditor.value = '';
+      elPreview.innerHTML = '<p class="md-placeholder">Start typing Markdown\u2026</p>';
+      renderStatusBar();
+      elEditor.focus();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       LAYOUT SWITCHER
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Switch between 'split', 'editor', and 'preview' layout modes.
+     * Shows/hides panels and updates appState.layout.
+     */
+    function switchLayout(mode) {
+      appState.layout = mode;
+
+      switch (mode) {
+        case 'editor':
+          elPanelEditor.hidden  = false;
+          elPanelPreview.hidden = true;
+          break;
+        case 'preview':
+          elPanelEditor.hidden  = true;
+          elPanelPreview.hidden = false;
+          break;
+        case 'split':
+        default:
+          elPanelEditor.hidden  = false;
+          elPanelPreview.hidden = false;
+          break;
+      }
+
+      renderStatusBar();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════════ */
+
+    function init() {
+      // Live preview + status bar — debounced 200 ms
+      const liveRender = debounce(() => {
+        renderPreview();
+        renderStatusBar();
+      }, 200);
+
+      elEditor.addEventListener('input', liveRender);
+
+      // Word-wrap toggle
+      elBtnWordWrap.addEventListener('click', () => {
+        appState.wordWrap = !appState.wordWrap;
+        applyWordWrap();
+      });
+
+      // Layout switcher
+      elLayoutSelect.addEventListener('change', () => {
+        switchLayout(elLayoutSelect.value);
+      });
+
+      // Scroll sync (split mode only — no-op when one panel is hidden)
+      elEditor.addEventListener('scroll', () => {
+        if (appState.layout === 'split') syncScroll(elEditor, elPanelPreview);
+      });
+      elPanelPreview.addEventListener('scroll', () => {
+        if (appState.layout === 'split') syncScroll(elPanelPreview, elEditor);
+      });
+
+      // Copy HTML buttons (action bar + panel header)
+      elBtnCopyHTML.addEventListener('click',   () => copyHTML(elBtnCopyHTML));
+      elBtnCopyInline.addEventListener('click', () => copyHTML(elBtnCopyInline));
+
+      // Export HTML button
+      elBtnExport.addEventListener('click', exportHTML);
+
+      // Clear button
+      elBtnClear.addEventListener('click', handleClear);
+
+      // Tab key in editor — insert 2 spaces instead of moving focus
+      elEditor.addEventListener('keydown', e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = elEditor.selectionStart;
+          const end   = elEditor.selectionEnd;
+          elEditor.value =
+            elEditor.value.slice(0, start) + '  ' + elEditor.value.slice(end);
+          elEditor.selectionStart = elEditor.selectionEnd = start + 2;
+          elEditor.dispatchEvent(new Event('input'));
+        }
+      });
+
+      // Global keyboard shortcuts
+      document.addEventListener('keydown', e => {
+        const ctrl = e.ctrlKey || e.metaKey;
+
+        // Ctrl+Shift+C — Copy HTML
+        if (ctrl && e.shiftKey && e.key === 'C') {
+          e.preventDefault();
+          copyHTML(elBtnCopyHTML);
+          return;
+        }
+
+        // Ctrl+Shift+E — Export HTML
+        if (ctrl && e.shiftKey && e.key === 'E') {
+          e.preventDefault();
+          exportHTML();
+          return;
+        }
+
+        // Escape — Clear (only when editor is not the focused element)
+        if (e.key === 'Escape' && document.activeElement !== elEditor) {
+          handleClear();
+        }
+      });
+
+      // Initial state
+      applyWordWrap();
+      switchLayout('split');
+      renderPreview();
+      renderStatusBar();
+      elEditor.focus();
+    }
+
+    init();
+  </script>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+
+</body>
+</html>

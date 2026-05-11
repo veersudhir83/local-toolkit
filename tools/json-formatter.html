@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Formatter — LocalKit</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>📋</text></svg>" />
+  <style>
+    /* ── CSS Custom Properties ────────────────────────────────── */
+    :root {
+      --bg-base:        #1e1e1e;
+      --bg-panel:       #252526;
+      --bg-card:        #2d2d2d;
+      --bg-card-hover:  #333334;
+      --bg-input:       #1e1e1e;
+      --bg-header:      #323233;
+      --bg-statusbar:   #007acc;
+      --border:         #3e3e3e;
+      --border-focus:   #007acc;
+      --text-primary:   #d4d4d4;
+      --text-secondary: #9d9d9d;
+      --text-muted:     #6b6b6b;
+      --accent-blue:    #007acc;
+      --accent-green:   #4ec9b0;
+      --accent-orange:  #ce9178;
+      --accent-red:     #f44747;
+      --accent-yellow:  #dcdcaa;
+      --radius:         6px;
+      --radius-sm:      4px;
+      --font-ui:        -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono:      'Cascadia Code', 'Fira Code', 'Consolas', 'Menlo', monospace;
+      --transition:     140ms ease;
+      --header-h:       48px;
+      --actionbar-h:    48px;
+      --statusbar-h:    30px;
+
+      /* JSON syntax colours */
+      --json-key:    #9cdcfe;
+      --json-string: #ce9178;
+      --json-number: #b5cea8;
+      --json-bool:   #569cd6;
+      --json-null:   #569cd6;
+      --json-punct:  #d4d4d4;
+
+      /* Diff colours */
+      --diff-added:   rgba(78, 201, 176, 0.18);
+      --diff-removed: rgba(244, 71, 71, 0.18);
+      --diff-changed: rgba(220, 220, 170, 0.18);
+      --diff-added-border:   #4ec9b0;
+      --diff-removed-border: #f44747;
+      --diff-changed-border: #dcdcaa;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:        #f5f5f5;
+      --bg-panel:       #ececec;
+      --bg-card:        #ffffff;
+      --bg-card-hover:  #f0f0f0;
+      --bg-input:       #ffffff;
+      --bg-header:      #e0e0e0;
+      --bg-statusbar:   #0066b8;
+      --border:         #cccccc;
+      --border-focus:   #0066b8;
+      --text-primary:   #1e1e1e;
+      --text-secondary: #555555;
+      --text-muted:     #888888;
+      --accent-blue:    #0066b8;
+      --accent-green:   #1a8a76;
+      --accent-orange:  #a0522d;
+      --accent-red:     #cc0000;
+      --accent-yellow:  #7a6800;
+
+      --json-key:    #0066b8;
+      --json-string: #a0522d;
+      --json-number: #1a8a76;
+      --json-bool:   #8b008b;
+      --json-null:   #8b008b;
+      --json-punct:  #1e1e1e;
+
+      --diff-added:   rgba(26, 138, 118, 0.15);
+      --diff-removed: rgba(204, 0, 0, 0.12);
+      --diff-changed: rgba(122, 104, 0, 0.15);
+      --diff-added-border:   #1a8a76;
+      --diff-removed-border: #cc0000;
+      --diff-changed-border: #7a6800;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .app-header {
+      height: var(--header-h);
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .app-header__back {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color var(--transition);
+    }
+    .app-header__back:hover { color: var(--text-primary); }
+
+    .app-header__sep { color: var(--text-muted); font-size: 13px; }
+
+    .app-header__title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* ── Action Bar ───────────────────────────────────────────── */
+    .action-bar {
+      height: var(--actionbar-h);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-group--right {
+      margin-left: auto;
+      gap: 8px;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-card-hover); border-color: #555; }
+
+    .btn--primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+    .btn--primary:hover { background: #0088e0; border-color: #0088e0; }
+
+    .btn--danger { color: var(--accent-red); border-color: #5a2020; }
+    .btn--danger:hover { background: rgba(244,71,71,0.12); border-color: var(--accent-red); }
+
+    .btn--copy {
+      font-size: 11px;
+      height: 24px;
+      padding: 0 10px;
+    }
+    .btn--copy.btn--copied {
+      background: rgba(78, 201, 176, 0.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* ── Mode Select ──────────────────────────────────────────── */
+    .mode-label { font-size: 12px; color: var(--text-muted); }
+
+    .mode-select {
+      height: 28px;
+      padding: 0 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      outline: none;
+    }
+    .mode-select:focus { border-color: var(--border-focus); }
+
+    /* ── Workspace ────────────────────────────────────────────── */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Panels (split) ───────────────────────────────────────── */
+    .panels {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel + .panel { border-left: 1px solid var(--border); }
+
+    .panel__header {
+      height: 36px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .panel__hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 2px;
+    }
+
+    /* Tabs in panel header */
+    .tab-nav {
+      display: flex;
+      gap: 2px;
+      margin-left: 4px;
+    }
+
+    .tab-btn {
+      height: 24px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+    }
+    .tab-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+    .tab-btn--active {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    /* Push copy button to right inside panel header */
+    .panel__header .btn--copy { margin-left: auto; }
+
+    /* ── Validity Badge (diff mode per-textarea) ──────────────── */
+    .validity-badge {
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: auto;
+    }
+    .validity-badge.valid   { color: var(--accent-green); }
+    .validity-badge.invalid { color: var(--accent-red); }
+
+    /* ── JSON Input textarea ──────────────────────────────────── */
+    .json-input {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+      tab-size: 2;
+    }
+    .json-input::placeholder { color: var(--text-muted); }
+    .json-input.input--error { box-shadow: inset 0 0 0 2px var(--accent-red); }
+
+    /* ── Tab Panels ───────────────────────────────────────────── */
+    .tab-panels {
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-panel {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    /* ── Output Pre (Pretty / Raw) ────────────────────────────── */
+    .output-pre {
+      margin: 0;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre;
+      overflow: visible;
+      background: transparent;
+      color: var(--text-primary);
+    }
+
+    /* ── Output Tree ──────────────────────────────────────────── */
+    .output-tree {
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    /* Tree node styles (populated by JS) */
+    .tree-node { list-style: none; }
+    .tree-key  { color: var(--json-key); }
+    .tree-str  { color: var(--json-string); }
+    .tree-num  { color: var(--json-number); }
+    .tree-bool { color: var(--json-bool); }
+    .tree-null { color: var(--json-null); }
+    .tree-punct { color: var(--json-punct); }
+
+    .tree-toggle {
+      cursor: pointer;
+      user-select: none;
+      display: inline-block;
+      width: 16px;
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .tree-children {
+      padding-left: 20px;
+    }
+    .tree-children.collapsed { display: none; }
+
+    /* ── Diff Result ──────────────────────────────────────────── */
+    .diff-result {
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+      max-height: 45vh;
+      overflow: auto;
+    }
+
+    .diff-result__header {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg-panel);
+      z-index: 1;
+    }
+
+    .diff-result__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .diff-result__legend { display: flex; gap: 12px; margin-left: auto; }
+
+    .legend-item {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 8px;
+      border-radius: 10px;
+    }
+    .legend-item--added   { background: var(--diff-added);   color: var(--accent-green); border: 1px solid var(--diff-added-border); }
+    .legend-item--removed { background: var(--diff-removed); color: var(--accent-red);   border: 1px solid var(--diff-removed-border); }
+    .legend-item--changed { background: var(--diff-changed); color: var(--accent-yellow);border: 1px solid var(--diff-changed-border); }
+
+    .diff-result__body { padding: 8px 0; }
+
+    /* Diff table rows */
+    .diff-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .diff-table th {
+      text-align: left;
+      padding: 4px 14px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      position: sticky;
+      top: 36px;
+    }
+
+    .diff-table td {
+      padding: 3px 14px;
+      vertical-align: top;
+      line-height: 1.6;
+      border-bottom: 1px solid rgba(62,62,62,0.4);
+    }
+
+    .diff-table td:first-child { color: var(--text-muted); width: 35%; word-break: break-all; }
+    .diff-table td:nth-child(2),
+    .diff-table td:nth-child(3) { width: 32.5%; word-break: break-all; }
+
+    .diff-row--added   { background: var(--diff-added); }
+    .diff-row--removed { background: var(--diff-removed); }
+    .diff-row--changed { background: var(--diff-changed); }
+
+    /* ── Status Bar ───────────────────────────────────────────── */
+    .status-bar {
+      height: var(--statusbar-h);
+      background: var(--bg-statusbar);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 16px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .status-bar__validity { font-weight: 600; }
+    .status-bar__validity.valid   { color: #fff; }
+    .status-bar__validity.invalid { color: #ffaaaa; }
+
+    .status-bar__sep { margin: 0 10px; opacity: 0.5; }
+    .status-bar__stat { opacity: 0.85; }
+
+    /* ── Syntax highlight spans (injected by JS) ──────────────── */
+    .jk { color: var(--json-key); }
+    .js { color: var(--json-string); }
+    .jn { color: var(--json-number); }
+    .jb { color: var(--json-bool); }
+    .jz { color: var(--json-null); }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .panels { flex-direction: column; }
+      .panel + .panel { border-left: none; border-top: 1px solid var(--border); }
+      .diff-result { max-height: 50vh; }
+      .action-bar { gap: 4px; padding: 0 10px; }
+      .btn { padding: 0 8px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <a href="../index.html" class="app-header__back">🧰 LocalKit</a>
+    <span class="app-header__sep">/</span>
+    <span class="app-header__title">📋 JSON Formatter</span>
+    <div style="flex:1"></div>
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 140ms ease;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- ══ ACTION BAR ══════════════════════════════════════════════ -->
+  <div class="action-bar" id="action-bar">
+
+    <!-- Format mode actions (visible by default) -->
+    <div class="action-group" id="actions-format">
+      <button class="btn btn--primary" id="btn-format">Format</button>
+      <button class="btn" id="btn-minify">Minify</button>
+      <button class="btn" id="btn-validate">Validate</button>
+      <button class="btn btn--danger" id="btn-clear">Clear</button>
+    </div>
+
+    <!-- Diff mode actions (hidden by default) -->
+    <div class="action-group" id="actions-diff" hidden>
+      <button class="btn btn--primary" id="btn-compare">Compare</button>
+      <button class="btn" id="btn-swap">Swap</button>
+      <button class="btn btn--danger" id="btn-clear-both">Clear Both</button>
+    </div>
+
+    <!-- Mode switcher (right side) -->
+    <div class="action-group action-group--right">
+      <label class="mode-label" for="mode-select">Mode:</label>
+      <select class="mode-select" id="mode-select" aria-label="Switch mode">
+        <option value="format" selected>Format</option>
+        <option value="diff">Diff</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- ══ WORKSPACE ════════════════════════════════════════════════ -->
+  <div class="workspace" id="workspace">
+
+    <!-- ── FORMAT MODE ─────────────────────────────────────────── -->
+    <div class="panels" id="panels-format">
+
+      <!-- Input panel -->
+      <div class="panel panel--input">
+        <div class="panel__header">
+          <span class="panel__title">Input</span>
+          <span class="panel__hint">Paste JSON here</span>
+        </div>
+        <textarea
+          class="json-input"
+          id="json-input"
+          placeholder='{ "paste": "your JSON here" }'
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          aria-label="JSON input"
+        ></textarea>
+      </div>
+
+      <!-- Output panel -->
+      <div class="panel panel--output">
+        <div class="panel__header">
+          <span class="panel__title">Output</span>
+          <nav class="tab-nav" id="output-tab-nav" role="tablist" aria-label="Output view">
+            <button class="tab-btn tab-btn--active" role="tab" aria-selected="true"  data-tab="pretty">Pretty</button>
+            <button class="tab-btn"                 role="tab" aria-selected="false" data-tab="tree">Tree</button>
+            <button class="tab-btn"                 role="tab" aria-selected="false" data-tab="raw">Raw</button>
+          </nav>
+          <button class="btn btn--copy" id="btn-copy" title="Copy output (Ctrl+Shift+C)">Copy</button>
+        </div>
+
+        <!-- Tab panels -->
+        <div class="tab-panels">
+          <div class="tab-panel tab-panel--active" id="panel-pretty" role="tabpanel">
+            <pre class="output-pre" id="output-pretty" aria-label="Pretty printed JSON"></pre>
+          </div>
+          <div class="tab-panel" id="panel-tree" role="tabpanel" hidden>
+            <div class="output-tree" id="output-tree" aria-label="JSON tree view"></div>
+          </div>
+          <div class="tab-panel" id="panel-raw" role="tabpanel" hidden>
+            <pre class="output-pre" id="output-raw" aria-label="Raw JSON output"></pre>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /panels-format -->
+
+    <!-- ── DIFF MODE ────────────────────────────────────────────── -->
+    <div class="panels" id="panels-diff" hidden>
+
+      <!-- JSON A -->
+      <div class="panel panel--input">
+        <div class="panel__header">
+          <span class="panel__title">JSON A</span>
+          <span class="validity-badge" id="badge-a" aria-live="polite"></span>
+        </div>
+        <textarea
+          class="json-input"
+          id="json-input-a"
+          placeholder='{ "version": "A" }'
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          aria-label="JSON A input"
+        ></textarea>
+      </div>
+
+      <!-- JSON B -->
+      <div class="panel panel--input">
+        <div class="panel__header">
+          <span class="panel__title">JSON B</span>
+          <span class="validity-badge" id="badge-b" aria-live="polite"></span>
+        </div>
+        <textarea
+          class="json-input"
+          id="json-input-b"
+          placeholder='{ "version": "B" }'
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          aria-label="JSON B input"
+        ></textarea>
+      </div>
+
+    </div><!-- /panels-diff -->
+
+    <!-- ── DIFF RESULT ───────────────────────────────────────────── -->
+    <div class="diff-result" id="diff-result" hidden>
+      <div class="diff-result__header">
+        <span class="diff-result__title">Diff Result</span>
+        <span class="diff-result__legend">
+          <span class="legend-item legend-item--added">Added</span>
+          <span class="legend-item legend-item--removed">Removed</span>
+          <span class="legend-item legend-item--changed">Changed</span>
+        </span>
+      </div>
+      <div class="diff-result__body" id="diff-output"></div>
+    </div>
+
+  </div><!-- /workspace -->
+
+  <!-- ══ STATUS BAR ═══════════════════════════════════════════════ -->
+  <div class="status-bar" id="status-bar" role="status" aria-live="polite">
+    <span class="status-bar__validity" id="status-validity">—</span>
+    <span class="status-bar__sep" aria-hidden="true">·</span>
+    <span class="status-bar__stat" id="status-keys">—</span>
+    <span class="status-bar__sep" aria-hidden="true">·</span>
+    <span class="status-bar__stat" id="status-depth">—</span>
+    <span class="status-bar__sep" aria-hidden="true">·</span>
+    <span class="status-bar__stat" id="status-chars">—</span>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ══════════════════════════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════════════════════════ */
+    const appState = {
+      mode:      'format',  // 'format' | 'diff'
+      outputTab: 'pretty',  // 'pretty' | 'tree' | 'raw'
+      input:     '',        // format mode textarea content
+      inputA:    '',        // diff mode left textarea
+      inputB:    '',        // diff mode right textarea
+      parsed:    null,      // last successfully parsed value (format mode)
+      error:     null,      // parse error string or null
+    };
+
+    /* ══════════════════════════════════════════════════════════════
+       DOM REFS
+    ══════════════════════════════════════════════════════════════ */
+    const $ = id => document.getElementById(id);
+
+    const elInput          = $('json-input');
+    const elActionsFormat  = $('actions-format');
+    const elActionsDiff    = $('actions-diff');
+    const elPanelsFormat   = $('panels-format');
+    const elPanelsDiff     = $('panels-diff');
+    const elDiffResult     = $('diff-result');
+    const elModeSelect     = $('mode-select');
+    const elOutputTabNav   = $('output-tab-nav');
+    const elPanelPretty    = $('panel-pretty');
+    const elPanelTree      = $('panel-tree');
+    const elPanelRaw       = $('panel-raw');
+    const elOutputPretty   = $('output-pretty');
+    const elOutputTree     = $('output-tree');
+    const elOutputRaw      = $('output-raw');
+    const elStatusValidity = $('status-validity');
+    const elStatusKeys     = $('status-keys');
+    const elStatusDepth    = $('status-depth');
+    const elStatusChars    = $('status-chars');
+    const elBtnFormat      = $('btn-format');
+    const elBtnMinify      = $('btn-minify');
+    const elBtnValidate    = $('btn-validate');
+    const elBtnClear       = $('btn-clear');
+    const elBtnCopy        = $('btn-copy');
+
+    /* ══════════════════════════════════════════════════════════════
+       CORE PARSE / FORMAT / MINIFY
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Parse a JSON string. Returns { ok, value, error }. */
+    function parseInput(str) {
+      try {
+        const value = JSON.parse(str);
+        return { ok: true, value, error: null };
+      } catch (e) {
+        return { ok: false, value: null, error: e.message };
+      }
+    }
+
+    /** Pretty-print a parsed value with 2-space indent. */
+    function formatJSON(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    /** Compact single-line JSON. */
+    function minifyJSON(value) {
+      return JSON.stringify(value);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       OUTPUT RENDERING
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Clear all output panels. */
+    function clearOutput() {
+      elOutputPretty.innerHTML = '';
+      elOutputRaw.textContent  = '';
+      elOutputTree.innerHTML   = '';
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       SYNTAX HIGHLIGHT
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Converts a formatted JSON string into syntax-highlighted HTML.
+     * Returns an HTML string safe for use as innerHTML of a <pre>.
+     *
+     * Token classes:
+     *   .jk  object key
+     *   .js  string value
+     *   .jn  number
+     *   .jb  boolean (true/false)
+     *   .jz  null
+     */
+    function syntaxHighlight(json) {
+      // Escape HTML entities first to prevent XSS via key/value content
+      const escaped = json
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+
+      return escaped.replace(
+        /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        match => {
+          let cls = 'jn'; // number default
+          if (/^"/.test(match)) {
+            cls = /:$/.test(match) ? 'jk' : 'js';
+          } else if (/true|false/.test(match)) {
+            cls = 'jb';
+          } else if (/null/.test(match)) {
+            cls = 'jz';
+          }
+          // For object keys, strip the trailing colon from the span content
+          // and re-append it as plain text so the colon isn't coloured
+          if (cls === 'jk') {
+            const colon = match.endsWith(':') ? ':' : '';
+            const key   = colon ? match.slice(0, -1) : match;
+            return '<span class="jk">' + key + '</span>' + colon;
+          }
+          return '<span class="' + cls + '">' + match + '</span>';
+        }
+      );
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       JSON TREE VIEW
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Recursively builds a collapsible DOM tree for a parsed JSON value.
+     * Appends nodes to `container` (a <ul> or <div>).
+     *
+     * @param {*}           value     - parsed JSON value (any type)
+     * @param {HTMLElement} container - DOM element to append into
+     * @param {string}      [key]     - property key label (omit for root)
+     */
+    function buildJsonTree(value, container, key) {
+      const isObj   = value !== null && typeof value === 'object' && !Array.isArray(value);
+      const isArr   = Array.isArray(value);
+      const isLeaf  = !isObj && !isArr;
+
+      const item = document.createElement('div');
+      item.className = 'tree-node';
+
+      if (isLeaf) {
+        // ── Leaf node ────────────────────────────────────────────
+        const keySpan = key !== undefined
+          ? '<span class="tree-key">"' + escHtml(String(key)) + '"</span><span class="tree-punct">: </span>'
+          : '';
+
+        let valSpan;
+        if (value === null) {
+          valSpan = '<span class="tree-null">null</span>';
+        } else if (typeof value === 'boolean') {
+          valSpan = '<span class="tree-bool">' + value + '</span>';
+        } else if (typeof value === 'number') {
+          valSpan = '<span class="tree-num">' + value + '</span>';
+        } else {
+          valSpan = '<span class="tree-str">"' + escHtml(String(value)) + '"</span>';
+        }
+
+        item.innerHTML = keySpan + valSpan;
+        container.appendChild(item);
+        return;
+      }
+
+      // ── Collapsible branch node ───────────────────────────────
+      const entries  = isObj ? Object.entries(value) : value.map((v, i) => [i, v]);
+      const openBr   = isObj ? '{' : '[';
+      const closeBr  = isObj ? '}' : ']';
+      const count    = entries.length;
+      const summary  = count + (isObj ? ' key' : ' item') + (count !== 1 ? 's' : '');
+
+      // Toggle button
+      const toggle = document.createElement('span');
+      toggle.className = 'tree-toggle';
+      toggle.textContent = '\u25bc'; // ▼
+
+      // Header line
+      const header = document.createElement('div');
+      header.className = 'tree-header';
+      let headerHTML = '';
+      if (key !== undefined) {
+        headerHTML += '<span class="tree-key">"' + escHtml(String(key)) + '"</span><span class="tree-punct">: </span>';
+      }
+      headerHTML += '<span class="tree-punct">' + openBr + '</span>';
+      headerHTML += '<span class="tree-summary"> ' + summary + ' </span>';
+      header.innerHTML = headerHTML;
+      header.prepend(toggle);
+
+      // Children container
+      const children = document.createElement('div');
+      children.className = 'tree-children';
+
+      entries.forEach(([k, v]) => buildJsonTree(v, children, k));
+
+      // Close bracket (shown when collapsed as inline hint)
+      const footer = document.createElement('div');
+      footer.className = 'tree-footer';
+      footer.innerHTML = '<span class="tree-punct">' + closeBr + '</span>';
+
+      // Toggle expand/collapse
+      toggle.addEventListener('click', () => {
+        const collapsed = children.classList.toggle('collapsed');
+        toggle.textContent = collapsed ? '\u25ba' : '\u25bc'; // ► / ▼
+        footer.style.display = collapsed ? 'none' : '';
+      });
+
+      item.appendChild(header);
+      item.appendChild(children);
+      item.appendChild(footer);
+      container.appendChild(item);
+    }
+
+    /** HTML-escape helper for tree node content. */
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
+    }
+
+    /**
+     * Render formatted text into output panels.
+     * Pretty tab uses syntax-highlighted HTML.
+     * Tree tab uses buildJsonTree().
+     */
+    function renderOutput(text) {
+      elOutputRaw.textContent  = text;
+      elOutputPretty.innerHTML = syntaxHighlight(text);
+
+      // Tree tab
+      elOutputTree.innerHTML = '';
+      if (appState.parsed !== null) {
+        buildJsonTree(appState.parsed, elOutputTree);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STATUS BAR
+    ══════════════════════════════════════════════════════════════ */
+
+    function showValid() {
+      elStatusValidity.textContent = '\u2705 Valid JSON';
+      elStatusValidity.className   = 'status-bar__validity valid';
+    }
+
+    function showInvalid(msg) {
+      elStatusValidity.textContent = '\u274c ' + msg;
+      elStatusValidity.className   = 'status-bar__validity invalid';
+    }
+
+    function clearStatus() {
+      elStatusValidity.textContent = '\u2014';
+      elStatusValidity.className   = 'status-bar__validity';
+      elStatusKeys.textContent     = '\u2014';
+      elStatusDepth.textContent    = '\u2014';
+      elStatusChars.textContent    = '\u2014';
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       STATS
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Recursively compute key count and max nesting depth.
+     * @param {*}      value
+     * @param {number} depth - current depth (start at 0)
+     * @returns {{ keyCount: number, maxDepth: number }}
+     */
+    function computeStats(value, depth) {
+      depth = depth || 0;
+      if (value === null || typeof value !== 'object') {
+        return { keyCount: 1, maxDepth: depth };
+      }
+      const isArray  = Array.isArray(value);
+      const children = isArray ? value : Object.values(value);
+      let keyCount   = isArray ? 0 : Object.keys(value).length;
+      let maxDepth   = depth;
+
+      children.forEach(child => {
+        const sub = computeStats(child, depth + 1);
+        keyCount += sub.keyCount;
+        if (sub.maxDepth > maxDepth) maxDepth = sub.maxDepth;
+      });
+
+      return { keyCount, maxDepth };
+    }
+
+    /**
+     * Populate the stats slots in the status bar.
+     * @param {*}      parsed   - successfully parsed JSON value
+     * @param {string} rawInput - original input string
+     */
+    function renderStatusBar(parsed, rawInput) {
+      const { keyCount, maxDepth } = computeStats(parsed, 0);
+      const chars = rawInput.length;
+      elStatusKeys.textContent  = keyCount + (keyCount  === 1 ? ' key'   : ' keys');
+      elStatusDepth.textContent = maxDepth + (maxDepth  === 1 ? ' level' : ' levels') + ' deep';
+      elStatusChars.textContent = chars    + (chars     === 1 ? ' char'  : ' chars');
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       DEBOUNCE + LIVE VALIDATION
+    ══════════════════════════════════════════════════════════════ */
+
+    function debounce(fn, ms) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+      };
+    }
+
+    /** Debounced live-validate: updates status bar as user types. */
+    const liveValidate = debounce(() => {
+      const raw = elInput.value.trim();
+      if (!raw) {
+        elInput.classList.remove('input--error');
+        clearStatus();
+        return;
+      }
+      const result = parseInput(raw);
+      if (!result.ok) {
+        elInput.classList.add('input--error');
+        showInvalid(result.error);
+        elStatusKeys.textContent  = '\u2014';
+        elStatusDepth.textContent = '\u2014';
+        elStatusChars.textContent = raw.length + ' chars';
+      } else {
+        elInput.classList.remove('input--error');
+        showValid();
+        renderStatusBar(result.value, raw);
+      }
+    }, 300);
+
+    /* ══════════════════════════════════════════════════════════════
+       TAB SWITCHER
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Generic tab switcher.
+     * @param {HTMLElement} navEl     - element holding [data-tab] buttons
+     * @param {Function}    getPanelEl - (tabId) => panel HTMLElement
+     */
+    function initTabs(navEl, getPanelEl) {
+      navEl.addEventListener('click', e => {
+        const btn = e.target.closest('[data-tab]');
+        if (!btn) return;
+        const tabId = btn.dataset.tab;
+
+        navEl.querySelectorAll('[data-tab]').forEach(b => {
+          const active = b === btn;
+          b.classList.toggle('tab-btn--active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+          const panel = getPanelEl(b.dataset.tab);
+          if (panel) panel.hidden = !active;
+        });
+
+        appState.outputTab = tabId;
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       MODE SWITCHER (Format <-> Diff)
+    ══════════════════════════════════════════════════════════════ */
+
+    function switchMode(mode) {
+      appState.mode = mode;
+      const isFormat = mode === 'format';
+
+      elActionsFormat.hidden = !isFormat;
+      elActionsDiff.hidden   =  isFormat;
+      elPanelsFormat.hidden  = !isFormat;
+      elPanelsDiff.hidden    =  isFormat;
+      elDiffResult.hidden    = true;      // always hidden until Compare runs
+
+      clearOutput();
+      clearStatus();
+
+      if (isFormat) elInput.focus();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BUTTON HANDLERS — FORMAT MODE
+    ══════════════════════════════════════════════════════════════ */
+
+    function handleFormat() {
+      const raw = elInput.value.trim();
+      if (!raw) { clearOutput(); clearStatus(); return; }
+
+      const result = parseInput(raw);
+      appState.parsed = result.ok ? result.value : null;
+      appState.error  = result.error;
+
+      if (!result.ok) {
+        showInvalid(result.error);
+        elInput.classList.add('input--error');
+        clearOutput();
+        return;
+      }
+
+      elInput.classList.remove('input--error');
+      showValid();
+      renderStatusBar(result.value, raw);
+      renderOutput(formatJSON(result.value));
+    }
+
+    function handleMinify() {
+      const raw = elInput.value.trim();
+      if (!raw) { clearOutput(); clearStatus(); return; }
+
+      const result = parseInput(raw);
+      appState.parsed = result.ok ? result.value : null;
+      appState.error  = result.error;
+
+      if (!result.ok) {
+        showInvalid(result.error);
+        elInput.classList.add('input--error');
+        clearOutput();
+        return;
+      }
+
+      elInput.classList.remove('input--error');
+      showValid();
+      renderStatusBar(result.value, raw);
+      renderOutput(minifyJSON(result.value));
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       DIFF MODE
+    ══════════════════════════════════════════════════════════════ */
+
+    const elInputA       = $('json-input-a');
+    const elInputB       = $('json-input-b');
+    const elBadgeA       = $('badge-a');
+    const elBadgeB       = $('badge-b');
+    const elDiffOut      = $('diff-output');
+    const elBtnCompare   = $('btn-compare');
+    const elBtnSwap      = $('btn-swap');
+    const elBtnClearBoth = $('btn-clear-both');
+
+    /**
+     * Recursive structural diff.
+     * Returns flat array of { path, type, aVal, bVal }.
+     * type: 'added' | 'removed' | 'changed' | 'unchanged'
+     */
+    function diffJSON(a, b, path) {
+      path = path || '(root)';
+      const changes = [];
+
+      const aIsObj = a !== null && typeof a === 'object' && !Array.isArray(a);
+      const bIsObj = b !== null && typeof b === 'object' && !Array.isArray(b);
+      const aIsArr = Array.isArray(a);
+      const bIsArr = Array.isArray(b);
+
+      if (aIsObj && bIsObj) {
+        const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+        keys.forEach(k => {
+          const cp = path === '(root)' ? k : path + '.' + k;
+          if (!(k in a)) {
+            changes.push({ path: cp, type: 'added',   aVal: undefined, bVal: b[k] });
+          } else if (!(k in b)) {
+            changes.push({ path: cp, type: 'removed', aVal: a[k], bVal: undefined });
+          } else {
+            changes.push(...diffJSON(a[k], b[k], cp));
+          }
+        });
+        return changes;
+      }
+
+      if (aIsArr && bIsArr) {
+        const len = Math.max(a.length, b.length);
+        for (let i = 0; i < len; i++) {
+          const cp = path + '[' + i + ']';
+          if (i >= a.length) {
+            changes.push({ path: cp, type: 'added',   aVal: undefined, bVal: b[i] });
+          } else if (i >= b.length) {
+            changes.push({ path: cp, type: 'removed', aVal: a[i], bVal: undefined });
+          } else {
+            changes.push(...diffJSON(a[i], b[i], cp));
+          }
+        }
+        return changes;
+      }
+
+      // Primitive or type mismatch
+      const aStr = JSON.stringify(a);
+      const bStr = JSON.stringify(b);
+      changes.push({ path, type: aStr === bStr ? 'unchanged' : 'changed', aVal: a, bVal: b });
+      return changes;
+    }
+
+    /** Render a flat change list as a diff table. */
+    function renderDiff(changes) {
+      const visible = changes.filter(c => c.type !== 'unchanged');
+      if (!visible.length) {
+        elDiffOut.innerHTML = '<p style="padding:12px 14px;color:var(--accent-green)">\u2705 JSON A and JSON B are identical.</p>';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.className = 'diff-table';
+      table.innerHTML = '<thead><tr><th>Path</th><th>A</th><th>B</th></tr></thead>';
+
+      const tbody = document.createElement('tbody');
+      visible.forEach(({ path, type, aVal, bVal }) => {
+        const tr = document.createElement('tr');
+        tr.className = 'diff-row--' + type;
+        const fmt = v => v === undefined ? '' : JSON.stringify(v);
+        tr.innerHTML =
+          '<td>' + escHtml(path) + '</td>' +
+          '<td>' + escHtml(fmt(aVal)) + '</td>' +
+          '<td>' + escHtml(fmt(bVal)) + '</td>';
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      elDiffOut.innerHTML = '';
+      elDiffOut.appendChild(table);
+    }
+
+    /** Validate a diff-mode textarea; update its badge. Returns parse result or null. */
+    function validateDiffInput(textarea, badge) {
+      const raw = textarea.value.trim();
+      if (!raw) {
+        badge.textContent = '';
+        badge.className   = 'validity-badge';
+        textarea.classList.remove('input--error');
+        return null;
+      }
+      const result = parseInput(raw);
+      if (result.ok) {
+        badge.textContent = '\u2705 Valid';
+        badge.className   = 'validity-badge valid';
+        textarea.classList.remove('input--error');
+      } else {
+        badge.textContent = '\u274c Invalid';
+        badge.className   = 'validity-badge invalid';
+        textarea.classList.add('input--error');
+      }
+      return result;
+    }
+
+    function handleCompare() {
+      const rA = validateDiffInput(elInputA, elBadgeA);
+      const rB = validateDiffInput(elInputB, elBadgeB);
+      elDiffResult.hidden = false;
+      if (!rA || !rB || !rA.ok || !rB.ok) {
+        elDiffOut.innerHTML = '<p style="padding:12px 14px;color:var(--accent-red)">\u274c Please provide valid JSON in both panels.</p>';
+        return;
+      }
+      renderDiff(diffJSON(rA.value, rB.value));
+    }
+
+    function handleSwap() {
+      const tmp      = elInputA.value;
+      elInputA.value = elInputB.value;
+      elInputB.value = tmp;
+      validateDiffInput(elInputA, elBadgeA);
+      validateDiffInput(elInputB, elBadgeB);
+      elDiffResult.hidden = true;
+      elDiffOut.innerHTML = '';
+    }
+
+    function handleClearBoth() {
+      elInputA.value = '';
+      elInputB.value = '';
+      elInputA.classList.remove('input--error');
+      elInputB.classList.remove('input--error');
+      elBadgeA.textContent = ''; elBadgeA.className = 'validity-badge';
+      elBadgeB.textContent = ''; elBadgeB.className = 'validity-badge';
+      elDiffResult.hidden  = true;
+      elDiffOut.innerHTML  = '';
+    }
+
+    function handleValidate() {
+      const raw = elInput.value.trim();
+      if (!raw) { clearStatus(); return; }
+
+      const result = parseInput(raw);
+      appState.parsed = result.ok ? result.value : null;
+      appState.error  = result.error;
+
+      if (!result.ok) {
+        showInvalid(result.error);
+        elInput.classList.add('input--error');
+      } else {
+        elInput.classList.remove('input--error');
+        showValid();
+      }
+    }
+
+    function handleClear() {
+      elInput.value = '';
+      elInput.classList.remove('input--error');
+      appState.parsed = null;
+      appState.error  = null;
+      clearOutput();
+      clearStatus();
+      elInput.focus();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       COPY BUTTON
+    ══════════════════════════════════════════════════════════════ */
+
+    /**
+     * Copy current output text to clipboard.
+     * Uses navigator.clipboard with execCommand fallback for file:// protocol.
+     */
+    function handleCopy() {
+      if (appState.mode !== 'format') return;
+      const text = elOutputRaw.textContent || elOutputPretty.textContent || '';
+      if (!text.trim()) return;
+
+      const showCopied = () => {
+        elBtnCopy.textContent = '\u2705 Copied!';
+        elBtnCopy.classList.add('btn--copied');
+        clearTimeout(elBtnCopy._copyTimer);
+        elBtnCopy._copyTimer = setTimeout(() => {
+          elBtnCopy.textContent = 'Copy';
+          elBtnCopy.classList.remove('btn--copied');
+        }, 1800);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+      } else {
+        fallbackCopy(text, showCopied);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); onSuccess(); } catch (_) { /* silent */ }
+      document.body.removeChild(ta);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════════ */
+
+    function init() {
+      // Wire output tabs
+      initTabs(elOutputTabNav, tabId =>
+        ({ pretty: elPanelPretty, tree: elPanelTree, raw: elPanelRaw })[tabId]
+      );
+
+      // Wire mode select
+      elModeSelect.addEventListener('change', () => switchMode(elModeSelect.value));
+
+      // Wire format-mode buttons
+      elBtnFormat.addEventListener('click', handleFormat);
+      elBtnMinify.addEventListener('click', handleMinify);
+      elBtnValidate.addEventListener('click', handleValidate);
+      elBtnClear.addEventListener('click', handleClear);
+
+      // Copy button
+      elBtnCopy.addEventListener('click', handleCopy);
+
+      // Live validation on format-mode input
+      elInput.addEventListener('input', liveValidate);
+
+      // Live validation on diff-mode inputs
+      elInputA.addEventListener('input', () => validateDiffInput(elInputA, elBadgeA));
+      elInputB.addEventListener('input', () => validateDiffInput(elInputB, elBadgeB));
+
+      // Wire diff-mode buttons
+      elBtnCompare.addEventListener('click', handleCompare);
+      elBtnSwap.addEventListener('click', handleSwap);
+      elBtnClearBoth.addEventListener('click', handleClearBoth);
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', e => {
+        const tag  = document.activeElement && document.activeElement.tagName;
+        if (tag === 'SELECT') return;
+        const ctrl = e.ctrlKey || e.metaKey;
+
+        if (ctrl && e.key === 'Enter') {
+          e.preventDefault();
+          appState.mode === 'format' ? handleFormat() : handleCompare();
+          return;
+        }
+        if (ctrl && !e.shiftKey && e.key === 'm') {
+          e.preventDefault();
+          if (appState.mode === 'format') handleMinify();
+          return;
+        }
+        if (ctrl && e.shiftKey && e.key === 'C') {
+          e.preventDefault();
+          handleCopy();
+          return;
+        }
+        if (e.key === 'Escape') {
+          appState.mode === 'format' ? handleClear() : handleClearBoth();
+        }
+      });
+
+      // Initial state
+      clearStatus();
+      elInput.focus();
+    }
+
+    init();
+  </script>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+
+</body>
+</html>

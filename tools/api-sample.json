@@ -1,0 +1,89 @@
+{
+  "collections": {
+    "0d3083f6-e255-4177-a8d7-cfc399142426": {
+      "id": "0d3083f6-e255-4177-a8d7-cfc399142426",
+      "name": "sample",
+      "createdAt": "2026-04-17T13:22:43.226Z",
+      "requests": [
+        {
+          "id": "70027a26-821f-4c22-911a-677fe7cea8a6",
+          "name": "Joke",
+          "method": "GET",
+          "url": "https://v2.jokeapi.dev/joke/Any",
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "params": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "body": "",
+          "bodyType": "none",
+          "bodyForm": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "id": "6c10baca-c3ec-4f9d-871e-7f12cd1d3b26",
+          "name": "Advice",
+          "method": "GET",
+          "url": "https://api.adviceslip.com/advice",
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "params": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "body": "",
+          "bodyType": "none",
+          "bodyForm": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "id": "1b8449ff-be05-405c-a91b-7230cee4029e",
+          "name": "spacex",
+          "method": "GET",
+          "url": "https://api.spacexdata.com/v4/launches/next",
+          "headers": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "params": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ],
+          "body": "",
+          "bodyType": "none",
+          "bodyForm": [
+            {
+              "key": "",
+              "value": ""
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

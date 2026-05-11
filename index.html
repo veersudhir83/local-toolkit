@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LocalKit</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>🧰</text></svg>" />
+  <style>
+    :root {
+      --bg-base:       #1e1e1e;
+      --bg-panel:      #252526;
+      --bg-card:       #2d2d2d;
+      --bg-card-hover: #333334;
+      --bg-header:     #323233;
+      --border:        #3e3e3e;
+      --text-primary:  #d4d4d4;
+      --text-secondary:#9d9d9d;
+      --text-muted:    #6b6b6b;
+      --accent-blue:   #007acc;
+      --accent-green:  #4ec9b0;
+      --accent-orange: #ce9178;
+      --accent-purple: #c586c0;
+      --accent-yellow: #dcdcaa;
+      --accent-red:    #f44747;
+      --radius:        6px;
+      --radius-lg:     10px;
+      --font-ui:       -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --transition:    140ms ease;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:       #f5f5f5;
+      --bg-panel:      #ececec;
+      --bg-card:       #ffffff;
+      --bg-card-hover: #f0f0f0;
+      --bg-header:     #e0e0e0;
+      --border:        #cccccc;
+      --text-primary:  #1e1e1e;
+      --text-secondary:#555555;
+      --text-muted:    #888888;
+      --accent-blue:   #0066b8;
+      --accent-green:  #1a8a76;
+      --accent-orange: #a0522d;
+      --accent-purple: #8b008b;
+      --accent-yellow: #7a6800;
+      --accent-red:    #cc0000;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .app-header {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .app-header__icon { font-size: 22px; }
+
+    .app-header__name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.3px;
+    }
+
+    .app-header__tagline {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* ── Main ───────────────────────────────── */
+    .app-main {
+      flex: 1;
+      padding: 48px 32px;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── Tool Grid ──────────────────────────── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+      cursor: pointer;
+    }
+
+    .tool-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .tool-card__icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .tool-card__name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .tool-card__desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .tool-card__tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      border: 1px solid;
+      align-self: flex-start;
+      margin-top: auto;
+    }
+
+    .tag--blue   { color: var(--accent-blue);   border-color: var(--accent-blue); }
+    .tag--green  { color: var(--accent-green);  border-color: var(--accent-green); }
+    .tag--orange { color: var(--accent-orange); border-color: var(--accent-orange); }
+    .tag--purple { color: var(--accent-purple); border-color: var(--accent-purple); }
+    .tag--yellow { color: var(--accent-yellow); border-color: var(--accent-yellow); }
+
+    /* ── Coming Soon card ───────────────────── */
+    .tool-card--coming-soon {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* ── Footer ─────────────────────────────── */
+    .app-footer {
+      padding: 16px 32px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .app-main { padding: 24px 16px; }
+      .tools-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <span class="app-header__icon">🧰</span>
+    <span class="app-header__name">LocalKit</span>
+    <span class="app-header__tagline">— your local productivity suite</span>
+    <div style="flex:1"></div>
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 140ms ease;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <main class="app-main">
+    <p class="section-title">Tools</p>
+
+    <div class="tools-grid">
+
+      <!-- API Client -->
+      <a href="tools/api-client.html" class="tool-card">
+        <span class="tool-card__icon">⚡</span>
+        <span class="tool-card__name">API Client</span>
+        <span class="tool-card__desc">Send HTTP requests, inspect responses, and organise saved requests into collections. A local Postman alternative.</span>
+        <span class="tool-card__tag tag--blue">HTTP · REST</span>
+      </a>
+
+      <!-- Task Tracker -->
+      <a href="tools/task-tracker.html" class="tool-card">
+        <span class="tool-card__icon">✅</span>
+        <span class="tool-card__name">Task Tracker</span>
+        <span class="tool-card__desc">Create tasks with target dates, notes, and reminders. Track progress with status labels. All data saved locally.</span>
+        <span class="tool-card__tag tag--green">Tasks · Reminders</span>
+      </a>
+
+      <!-- Cron Helper -->
+      <a href="tools/cron-helper.html" class="tool-card">
+        <span class="tool-card__icon">🕐</span>
+        <span class="tool-card__name">Cron Helper</span>
+        <span class="tool-card__desc">Build and explain cron expressions with a visual editor, quick presets, and next-run preview.</span>
+        <span class="tool-card__tag tag--orange">Scheduling</span>
+      </a>
+
+      <!-- JSON Formatter -->
+      <a href="tools/json-formatter.html" class="tool-card">
+        <span class="tool-card__icon">📋</span>
+        <span class="tool-card__name">JSON Formatter</span>
+        <span class="tool-card__desc">Paste, format, and validate JSON. Syntax-highlighted output, collapsible tree view, and diff mode.</span>
+        <span class="tool-card__tag tag--yellow">JSON · Diff</span>
+      </a>
+
+      <!-- Encoder / Decoder -->
+      <a href="tools/encoder-decoder.html" class="tool-card">
+        <span class="tool-card__icon">🔐</span>
+        <span class="tool-card__name">Encoder / Decoder</span>
+        <span class="tool-card__desc">Base64, URL encoding, JWT decoder, and hash generator — all in one place.</span>
+        <span class="tool-card__tag tag--purple">Encode · JWT · Hash</span>
+      </a>
+
+      <!-- Markdown Preview -->
+      <a href="tools/markdown-preview.html" class="tool-card">
+        <span class="tool-card__icon">📝</span>
+        <span class="tool-card__name">Markdown Preview</span>
+        <span class="tool-card__desc">Write and preview Markdown with split-pane editor. Export to HTML or copy rendered output.</span>
+        <span class="tool-card__tag tag--green">Markdown · Export</span>
+      </a>
+
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    LocalKit — zero install, zero dependencies, runs entirely in your browser
+  </footer>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+</body>
+</html>

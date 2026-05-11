@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encoder / Decoder — LocalKit</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>🔐</text></svg>" />
+  <style>
+    /* ── CSS Custom Properties ────────────────────────────────── */
+    :root {
+      --bg-base:        #1e1e1e;
+      --bg-panel:       #252526;
+      --bg-card:        #2d2d2d;
+      --bg-card-hover:  #333334;
+      --bg-input:       #1e1e1e;
+      --bg-header:      #323233;
+      --bg-statusbar:   #007acc;
+      --border:         #3e3e3e;
+      --border-focus:   #007acc;
+      --text-primary:   #d4d4d4;
+      --text-secondary: #9d9d9d;
+      --text-muted:     #6b6b6b;
+      --accent-blue:    #007acc;
+      --accent-green:   #4ec9b0;
+      --accent-orange:  #ce9178;
+      --accent-red:     #f44747;
+      --accent-yellow:  #dcdcaa;
+      --accent-purple:  #c586c0;
+      --radius:         6px;
+      --radius-sm:      4px;
+      --font-ui:        -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono:      'Cascadia Code', 'Fira Code', 'Consolas', 'Menlo', monospace;
+      --transition:     140ms ease;
+      --header-h:       48px;
+      --modebar-h:      42px;
+      --statusbar-h:    30px;
+
+      /* JSON syntax colours (used in JWT panels) */
+      --json-key:    #9cdcfe;
+      --json-string: #ce9178;
+      --json-number: #b5cea8;
+      --json-bool:   #569cd6;
+      --json-null:   #569cd6;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:        #f5f5f5;
+      --bg-panel:       #ececec;
+      --bg-card:        #ffffff;
+      --bg-card-hover:  #f0f0f0;
+      --bg-input:       #ffffff;
+      --bg-header:      #e0e0e0;
+      --bg-statusbar:   #0066b8;
+      --border:         #cccccc;
+      --border-focus:   #0066b8;
+      --text-primary:   #1e1e1e;
+      --text-secondary: #555555;
+      --text-muted:     #888888;
+      --accent-blue:    #0066b8;
+      --accent-green:   #1a8a76;
+      --accent-orange:  #a0522d;
+      --accent-red:     #cc0000;
+      --accent-yellow:  #7a6800;
+      --accent-purple:  #8b008b;
+
+      --json-key:    #0066b8;
+      --json-string: #a0522d;
+      --json-number: #1a8a76;
+      --json-bool:   #8b008b;
+      --json-null:   #8b008b;
+    }
+
+    /* ── Reset ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .app-header {
+      height: var(--header-h);
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .app-header__back {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: color var(--transition);
+    }
+    .app-header__back:hover { color: var(--text-primary); }
+
+    .app-header__sep { color: var(--text-muted); font-size: 13px; }
+
+    .app-header__title {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* ── Mode Tab Bar ─────────────────────────────────────────── */
+    .mode-bar {
+      height: var(--modebar-h);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .mode-tab {
+      height: 34px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+      position: relative;
+      top: 1px;
+    }
+    .mode-tab:hover { background: var(--bg-card); color: var(--text-primary); }
+    .mode-tab--active {
+      background: var(--bg-base);
+      border-color: var(--border);
+      color: var(--text-primary);
+    }
+
+    /* ── Workspace ────────────────────────────────────────────── */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Mode Panels ──────────────────────────────────────────── */
+    .mode-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Split layout (Base64 / URL) ──────────────────────────── */
+    .split-panels {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .split-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .split-pane + .split-pane { border-left: 1px solid var(--border); }
+
+    .pane-header {
+      height: 36px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+
+    .pane-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .pane-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: 6px;
+    }
+
+    /* Push copy button to the right of the pane header */
+    .pane-header .btn--copy { margin-left: auto; }
+
+    /* ── Shared textarea ──────────────────────────────────────── */
+    .enc-input {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+      tab-size: 2;
+    }
+    .enc-input::placeholder { color: var(--text-muted); }
+    .enc-input.input--error { box-shadow: inset 0 0 0 2px var(--accent-red); }
+
+    /* ── Output pre (Base64 / URL / Hash) ─────────────────────── */
+    .output-pre {
+      flex: 1;
+      margin: 0;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow: auto;
+      background: var(--bg-input);
+      color: var(--text-primary);
+    }
+
+    /* ── Buttons ──────────────────────────────────────────────── */
+    .btn {
+      height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-card-hover); border-color: #555; }
+
+    .btn--primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+    .btn--primary:hover { background: #0088e0; border-color: #0088e0; }
+
+    .btn--active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn--copy {
+      font-size: 11px;
+      height: 24px;
+      padding: 0 10px;
+    }
+    .btn--copy.btn--copied {
+      background: rgba(78, 201, 176, 0.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* ── JWT mode layout ──────────────────────────────────────── */
+    .jwt-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .jwt-input-wrap {
+      flex-shrink: 0;
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .jwt-input-wrap .pane-header { flex-shrink: 0; }
+
+    .jwt-token-input {
+      flex: 1;
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 14px;
+    }
+    .jwt-token-input::placeholder { color: var(--text-muted); }
+    .jwt-token-input.input--error { box-shadow: inset 0 0 0 2px var(--accent-red); }
+
+    .jwt-cards {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .jwt-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      border-right: 1px solid var(--border);
+    }
+    .jwt-card:last-child { border-right: none; }
+
+    .jwt-card__header {
+      height: 36px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+
+    .jwt-card__title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .jwt-card__body {
+      flex: 1;
+      overflow: auto;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .jwt-sig-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 14px;
+    }
+
+    /* ── Hash mode layout ─────────────────────────────────────── */
+    .hash-algo-select {
+      height: 24px;
+      padding: 0 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      outline: none;
+      margin-left: auto;
+    }
+    .hash-algo-select:focus { border-color: var(--border-focus); }
+
+    .hash-output-pre {
+      flex: 1;
+      margin: 0;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow: auto;
+      background: var(--bg-input);
+      color: var(--accent-green);
+    }
+
+    /* ── Insecure context banner ──────────────────────────────── */
+    .insecure-banner {
+      margin: 16px;
+      padding: 12px 16px;
+      background: rgba(220, 220, 170, 0.08);
+      border: 1px solid rgba(220, 220, 170, 0.3);
+      border-radius: var(--radius);
+      font-size: 13px;
+      color: var(--accent-yellow);
+      line-height: 1.6;
+    }
+
+    /* ── Syntax highlight spans (used in JWT) ─────────────────── */
+    .jk { color: var(--json-key); }
+    .js { color: var(--json-string); }
+    .jn { color: var(--json-number); }
+    .jb { color: var(--json-bool); }
+    .jz { color: var(--json-null); }
+
+    /* ── Status Bar ───────────────────────────────────────────── */
+    .status-bar {
+      height: var(--statusbar-h);
+      background: var(--bg-statusbar);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 16px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .status-bar__text { font-weight: 600; }
+    .status-bar__text.is-error { color: #ffaaaa; }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .split-panels { flex-direction: column; }
+      .split-pane + .split-pane { border-left: none; border-top: 1px solid var(--border); }
+      .jwt-cards { flex-direction: column; }
+      .jwt-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .jwt-card:last-child { border-bottom: none; }
+      .mode-tab { padding: 0 12px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ HEADER ══════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <a href="../index.html" class="app-header__back">🧰 LocalKit</a>
+    <span class="app-header__sep">/</span>
+    <span class="app-header__title">🔐 Encoder / Decoder</span>
+    <div style="flex:1"></div>
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 140ms ease;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- ══ MODE TAB BAR ════════════════════════════════════════════ -->
+  <nav class="mode-bar" id="mode-bar" role="tablist" aria-label="Encoding mode">
+    <button class="mode-tab mode-tab--active" role="tab" aria-selected="true"  aria-controls="panel-base64" data-mode="base64">Base64</button>
+    <button class="mode-tab"                  role="tab" aria-selected="false" aria-controls="panel-url"    data-mode="url">URL</button>
+    <button class="mode-tab"                  role="tab" aria-selected="false" aria-controls="panel-jwt"    data-mode="jwt">JWT</button>
+    <button class="mode-tab"                  role="tab" aria-selected="false" aria-controls="panel-hash"   data-mode="hash">Hash</button>
+  </nav>
+
+  <!-- ══ WORKSPACE ════════════════════════════════════════════════ -->
+  <div class="workspace">
+
+    <!-- ── BASE64 PANEL ────────────────────────────────────────── -->
+    <div class="mode-panel" id="panel-base64" role="tabpanel">
+      <div class="split-panels">
+
+        <!-- Input pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Input</span>
+            <div class="pane-actions">
+              <button class="btn btn--primary" id="btn-b64-encode">Encode ▶</button>
+              <button class="btn" id="btn-b64-decode">◀ Decode</button>
+            </div>
+          </div>
+          <textarea
+            class="enc-input"
+            id="b64-input"
+            placeholder="Paste text to encode, or Base64 to decode…"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
+            aria-label="Base64 input"
+          ></textarea>
+        </div>
+
+        <!-- Output pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Output</span>
+            <button class="btn btn--copy" id="btn-b64-copy">Copy</button>
+          </div>
+          <pre class="output-pre" id="b64-output" aria-label="Base64 output" aria-live="polite"></pre>
+        </div>
+
+      </div>
+    </div><!-- /panel-base64 -->
+
+    <!-- ── URL PANEL ───────────────────────────────────────────── -->
+    <div class="mode-panel" id="panel-url" role="tabpanel" hidden>
+      <div class="split-panels">
+
+        <!-- Input pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Input</span>
+            <div class="pane-actions">
+              <button class="btn btn--primary" id="btn-url-encode">Encode ▶</button>
+              <button class="btn" id="btn-url-decode">◀ Decode</button>
+            </div>
+          </div>
+          <textarea
+            class="enc-input"
+            id="url-input"
+            placeholder="Paste text to encode, or percent-encoded string to decode…"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
+            aria-label="URL input"
+          ></textarea>
+        </div>
+
+        <!-- Output pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Output</span>
+            <button class="btn btn--copy" id="btn-url-copy">Copy</button>
+          </div>
+          <pre class="output-pre" id="url-output" aria-label="URL encode/decode output" aria-live="polite"></pre>
+        </div>
+
+      </div>
+    </div><!-- /panel-url -->
+
+    <!-- ── JWT PANEL ───────────────────────────────────────────── -->
+    <div class="mode-panel" id="panel-jwt" role="tabpanel" hidden>
+      <div class="jwt-panel">
+
+        <!-- Token input -->
+        <div class="jwt-input-wrap">
+          <div class="pane-header">
+            <span class="pane-title">JWT Token</span>
+          </div>
+          <textarea
+            class="jwt-token-input"
+            id="jwt-input"
+            placeholder="Paste your JWT token here… (eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…)"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
+            aria-label="JWT token input"
+          ></textarea>
+        </div>
+
+        <!-- Three decoded cards -->
+        <div class="jwt-cards">
+
+          <!-- Header card -->
+          <div class="jwt-card">
+            <div class="jwt-card__header">
+              <span class="jwt-card__title">Header</span>
+            </div>
+            <div class="jwt-card__body" id="jwt-header" aria-label="JWT header" aria-live="polite"></div>
+          </div>
+
+          <!-- Payload card -->
+          <div class="jwt-card">
+            <div class="jwt-card__header">
+              <span class="jwt-card__title">Payload</span>
+            </div>
+            <div class="jwt-card__body" id="jwt-payload" aria-label="JWT payload" aria-live="polite"></div>
+          </div>
+
+          <!-- Signature card -->
+          <div class="jwt-card">
+            <div class="jwt-card__header">
+              <span class="jwt-card__title">Signature</span>
+            </div>
+            <div class="jwt-card__body" id="jwt-signature">
+              <span class="jwt-sig-note">⚠️ Signature not verified (client-side only)</span>
+            </div>
+          </div>
+
+        </div><!-- /jwt-cards -->
+
+      </div>
+    </div><!-- /panel-jwt -->
+
+    <!-- ── HASH PANEL ──────────────────────────────────────────── -->
+    <div class="mode-panel" id="panel-hash" role="tabpanel" hidden>
+      <div class="split-panels">
+
+        <!-- Input pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Input</span>
+            <select class="hash-algo-select" id="hash-algo" aria-label="Hash algorithm">
+              <option value="SHA-256" selected>SHA-256</option>
+              <option value="SHA-384">SHA-384</option>
+              <option value="SHA-512">SHA-512</option>
+            </select>
+          </div>
+          <textarea
+            class="enc-input"
+            id="hash-input"
+            placeholder="Paste text to hash…"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
+            aria-label="Hash input"
+          ></textarea>
+        </div>
+
+        <!-- Output pane -->
+        <div class="split-pane">
+          <div class="pane-header">
+            <span class="pane-title">Hash Output</span>
+            <button class="btn btn--copy" id="btn-hash-copy">Copy</button>
+          </div>
+          <pre class="hash-output-pre" id="hash-output" aria-label="Hash output" aria-live="polite"></pre>
+        </div>
+
+      </div>
+    </div><!-- /panel-hash -->
+
+  </div><!-- /workspace -->
+
+  <!-- ══ STATUS BAR ═══════════════════════════════════════════════ -->
+  <div class="status-bar" id="status-bar" role="status" aria-live="polite">
+    <span class="status-bar__text" id="status-text">—</span>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ══════════════════════════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════════════════════════ */
+    const appState = {
+      mode:     'base64',  // 'base64' | 'url' | 'jwt' | 'hash'
+      b64Dir:   'encode',  // 'encode' | 'decode'
+      urlDir:   'encode',  // 'encode' | 'decode'
+      hashAlgo: 'SHA-256',
+    };
+
+    /* ══════════════════════════════════════════════════════════════
+       DOM REFS
+    ══════════════════════════════════════════════════════════════ */
+    const $ = id => document.getElementById(id);
+
+    const elModeBar      = $('mode-bar');
+    const elStatusText   = $('status-text');
+
+    // Base64
+    const elB64Input     = $('b64-input');
+    const elB64Output    = $('b64-output');
+    const elBtnB64Encode = $('btn-b64-encode');
+    const elBtnB64Decode = $('btn-b64-decode');
+    const elBtnB64Copy   = $('btn-b64-copy');
+
+    // URL (wired in Chronicle 3)
+    const elUrlInput     = $('url-input');
+    const elUrlOutput    = $('url-output');
+    const elBtnUrlEncode = $('btn-url-encode');
+    const elBtnUrlDecode = $('btn-url-decode');
+    const elBtnUrlCopy   = $('btn-url-copy');
+
+    // JWT (wired in Chronicle 4)
+    const elJwtInput     = $('jwt-input');
+    const elJwtHeader    = $('jwt-header');
+    const elJwtPayload   = $('jwt-payload');
+    const elJwtSignature = $('jwt-signature');
+
+    // Hash (wired in Chronicle 5)
+    const elHashInput    = $('hash-input');
+    const elHashOutput   = $('hash-output');
+    const elHashAlgo     = $('hash-algo');
+    const elBtnHashCopy  = $('btn-hash-copy');
+
+    /* ══════════════════════════════════════════════════════════════
+       UTILITIES
+    ══════════════════════════════════════════════════════════════ */
+
+    function debounce(fn, ms) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+      };
+    }
+
+    function setStatus(msg, isError) {
+      elStatusText.textContent = msg;
+      elStatusText.className = 'status-bar__text' + (isError ? ' is-error' : '');
+    }
+
+    function copyToClipboard(text, btn) {
+      if (!text.trim()) return;
+      const showCopied = () => {
+        btn.textContent = '✅ Copied!';
+        btn.classList.add('btn--copied');
+        clearTimeout(btn._copyTimer);
+        btn._copyTimer = setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('btn--copied');
+        }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+      } else {
+        fallbackCopy(text, showCopied);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); onSuccess(); } catch (_) { /* silent */ }
+      document.body.removeChild(ta);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BASE64 ENCODE / DECODE
+    ══════════════════════════════════════════════════════════════ */
+
+    /** UTF-8 safe Base64 encode. Handles full Unicode including emoji. */
+    function base64Encode(str) {
+      const bytes = new TextEncoder().encode(str);
+      let binary = '';
+      bytes.forEach(b => { binary += String.fromCharCode(b); });
+      return btoa(binary);
+    }
+
+    /** Base64 decode back to UTF-8 string. Throws on invalid input. */
+    function base64Decode(b64) {
+      const binary = atob(b64);  // throws on invalid base64
+      const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    }
+
+    function runBase64() {
+      const raw = elB64Input.value;
+      if (!raw) {
+        elB64Output.textContent = '';
+        elB64Input.classList.remove('input--error');
+        setStatus('—');
+        return;
+      }
+      try {
+        let result;
+        if (appState.b64Dir === 'encode') {
+          result = base64Encode(raw);
+        } else {
+          // Strip whitespace/newlines common in pasted base64
+          result = base64Decode(raw.trim().replace(/\s/g, ''));
+        }
+        elB64Output.textContent = result;
+        elB64Input.classList.remove('input--error');
+        setStatus(raw.length + ' chars in · ' + result.length + ' chars out');
+      } catch (e) {
+        elB64Output.textContent = '';
+        elB64Input.classList.add('input--error');
+        setStatus('❌ ' + e.message, true);
+      }
+    }
+
+    function setB64Direction(dir) {
+      appState.b64Dir = dir;
+      if (dir === 'encode') {
+        elBtnB64Encode.classList.add('btn--active');
+        elBtnB64Decode.classList.remove('btn--active');
+      } else {
+        elBtnB64Decode.classList.add('btn--active');
+        elBtnB64Encode.classList.remove('btn--active');
+      }
+      runBase64();
+    }
+
+    const liveBase64 = debounce(runBase64, 200);
+
+    /* ══════════════════════════════════════════════════════════════
+       URL ENCODE / DECODE
+    ══════════════════════════════════════════════════════════════ */
+
+    function urlEncode(str) {
+      return encodeURIComponent(str);
+    }
+
+    function urlDecode(str) {
+      return decodeURIComponent(str);  // throws on malformed sequences
+    }
+
+    function runUrl() {
+      const raw = elUrlInput.value;
+      if (!raw) {
+        elUrlOutput.textContent = '';
+        elUrlInput.classList.remove('input--error');
+        setStatus('—');
+        return;
+      }
+      try {
+        const result = appState.urlDir === 'encode' ? urlEncode(raw) : urlDecode(raw);
+        elUrlOutput.textContent = result;
+        elUrlInput.classList.remove('input--error');
+        setStatus(raw.length + ' chars in · ' + result.length + ' chars out');
+      } catch (e) {
+        elUrlOutput.textContent = '';
+        elUrlInput.classList.add('input--error');
+        setStatus('❌ ' + e.message, true);
+      }
+    }
+
+    function setUrlDirection(dir) {
+      appState.urlDir = dir;
+      if (dir === 'encode') {
+        elBtnUrlEncode.classList.add('btn--active');
+        elBtnUrlDecode.classList.remove('btn--active');
+      } else {
+        elBtnUrlDecode.classList.add('btn--active');
+        elBtnUrlEncode.classList.remove('btn--active');
+      }
+      runUrl();
+    }
+
+    const liveUrl = debounce(runUrl, 200);
+
+    /* ══════════════════════════════════════════════════════════════
+       SYNTAX HIGHLIGHT (for JWT header/payload panels)
+    ══════════════════════════════════════════════════════════════ */
+
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
+    }
+
+    /**
+     * Converts a formatted JSON string into syntax-highlighted HTML.
+     * Identical colorizer pattern to tools/json-formatter.html.
+     */
+    function syntaxHighlight(json) {
+      const escaped = json
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+
+      return escaped.replace(
+        /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        match => {
+          let cls = 'jn';
+          if (/^"/.test(match)) {
+            cls = /:$/.test(match) ? 'jk' : 'js';
+          } else if (/true|false/.test(match)) {
+            cls = 'jb';
+          } else if (/null/.test(match)) {
+            cls = 'jz';
+          }
+          if (cls === 'jk') {
+            const colon = match.endsWith(':') ? ':' : '';
+            const key   = colon ? match.slice(0, -1) : match;
+            return '<span class="jk">' + key + '</span>' + colon;
+          }
+          return '<span class="' + cls + '">' + match + '</span>';
+        }
+      );
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       JWT DECODE
+    ══════════════════════════════════════════════════════════════ */
+
+    /** Normalise base64url to standard base64, then atob. */
+    function b64urlDecode(s) {
+      s = s.replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4) s += '=';
+      return atob(s);
+    }
+
+    /**
+     * Decode a JWT token string.
+     * Returns { header, payload, rawSig } on success, throws on failure.
+     */
+    function decodeJwt(token) {
+      const parts = token.trim().split('.');
+      if (parts.length !== 3) {
+        throw new Error('Expected 3 parts (header.payload.signature), got ' + parts.length);
+      }
+      const header  = JSON.parse(b64urlDecode(parts[0]));
+      const payload = JSON.parse(b64urlDecode(parts[1]));
+      return { header, payload, rawSig: parts[2] };
+    }
+
+    /** Format epoch timestamp claims (exp, iat, nbf) as human-readable date. */
+    function formatTimestamp(epoch) {
+      const d = new Date(epoch * 1000);
+      return epoch + ' (' + d.toLocaleString() + ')';
+    }
+
+    /**
+     * Build syntax-highlighted HTML for a JWT claim object.
+     * Annotates exp/iat/nbf with human-readable dates inline.
+     */
+    function renderClaimObject(obj) {
+      // Build a display copy: replace epoch timestamps with annotated strings
+      const display = {};
+      Object.entries(obj).forEach(([k, v]) => {
+        if ((k === 'exp' || k === 'iat' || k === 'nbf') && typeof v === 'number') {
+          display[k] = formatTimestamp(v);
+        } else {
+          display[k] = v;
+        }
+      });
+      return syntaxHighlight(JSON.stringify(display, null, 2));
+    }
+
+    function renderJwt() {
+      const raw = elJwtInput.value.trim();
+      if (!raw) {
+        elJwtHeader.innerHTML   = '';
+        elJwtPayload.innerHTML  = '';
+        elJwtSignature.innerHTML = '<span class="jwt-sig-note">&#x26A0;&#xFE0F; Signature not verified (client-side only)</span>';
+        elJwtInput.classList.remove('input--error');
+        setStatus('—');
+        return;
+      }
+      try {
+        const { header, payload, rawSig } = decodeJwt(raw);
+
+        elJwtHeader.innerHTML  = '<pre class="output-pre" style="flex:none;padding:0;background:transparent;white-space:pre-wrap;word-break:break-all">' + renderClaimObject(header) + '</pre>';
+        elJwtPayload.innerHTML = '<pre class="output-pre" style="flex:none;padding:0;background:transparent;white-space:pre-wrap;word-break:break-all">' + renderClaimObject(payload) + '</pre>';
+
+        // Signature card
+        const sigLines = [];
+        sigLines.push('<span style="color:var(--accent-yellow)">&#x26A0;&#xFE0F; Signature not verified (client-side only)</span>');
+        sigLines.push('<br><br>');
+        sigLines.push('<span style="color:var(--text-muted);font-size:11px">Raw:</span><br>');
+        sigLines.push('<span style="color:var(--text-secondary);word-break:break-all">' + escHtml(rawSig) + '</span>');
+        elJwtSignature.innerHTML = '<div style="padding:14px;font-family:var(--font-mono);font-size:12px;line-height:1.7">' + sigLines.join('') + '</div>';
+
+        elJwtInput.classList.remove('input--error');
+
+        // Status bar: expiry check
+        if (payload.exp !== undefined) {
+          const now = Math.floor(Date.now() / 1000);
+          if (payload.exp < now) {
+            const agoSec = now - payload.exp;
+            const agoMin = Math.round(agoSec / 60);
+            const ago = agoMin < 60
+              ? agoMin + ' min ago'
+              : Math.round(agoMin / 60) + ' hr ago';
+            setStatus('⚠️ Expired ' + ago + ' · exp: ' + new Date(payload.exp * 1000).toLocaleString(), true);
+          } else {
+            setStatus('✅ Valid JWT · Not expired · exp: ' + new Date(payload.exp * 1000).toLocaleString());
+          }
+        } else {
+          setStatus('✅ Valid JWT · No expiry claim');
+        }
+      } catch (e) {
+        elJwtHeader.innerHTML   = '';
+        elJwtPayload.innerHTML  = '';
+        elJwtSignature.innerHTML = '<span class="jwt-sig-note">&#x26A0;&#xFE0F; Signature not verified (client-side only)</span>';
+        elJwtInput.classList.add('input--error');
+        setStatus('❌ Invalid JWT: ' + e.message, true);
+      }
+    }
+
+    const liveJwt = debounce(renderJwt, 200);
+
+    /* ══════════════════════════════════════════════════════════════
+       HASH MODE
+    ══════════════════════════════════════════════════════════════ */
+
+    /** ArrayBuffer → lowercase hex string. */
+    function bufToHex(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    /**
+     * Hash a string with the given SubtleCrypto algorithm.
+     * Returns a Promise<string> (hex digest).
+     */
+    function hashText(str, algo) {
+      return crypto.subtle.digest(algo, new TextEncoder().encode(str))
+        .then(buf => bufToHex(buf));
+    }
+
+    function runHash() {
+      const raw  = elHashInput.value;
+      const algo = elHashAlgo.value;
+
+      if (!window.isSecureContext) {
+        // Banner is shown at init; no-op here
+        return;
+      }
+
+      if (!raw) {
+        elHashOutput.textContent = '';
+        setStatus('—');
+        return;
+      }
+
+      const t0 = performance.now();
+      hashText(raw, algo).then(hex => {
+        const elapsed = (performance.now() - t0).toFixed(1);
+        elHashOutput.textContent = hex;
+        setStatus(algo + ' · ' + raw.length + ' chars · computed in ' + elapsed + ' ms');
+      }).catch(e => {
+        elHashOutput.textContent = '';
+        setStatus('❌ ' + e.message, true);
+      });
+    }
+
+    const liveHash = debounce(runHash, 200);
+
+    /* ══════════════════════════════════════════════════════════════
+       MODE SWITCHER (stub — full wiring in Chronicle 6)
+    ══════════════════════════════════════════════════════════════ */
+
+    const MODES = ['base64', 'url', 'jwt', 'hash'];
+
+    function switchMode(mode) {
+      appState.mode = mode;
+      MODES.forEach(m => {
+        const panel = $('panel-' + m);
+        if (panel) panel.hidden = (m !== mode);
+      });
+      elModeBar.querySelectorAll('[data-mode]').forEach(btn => {
+        const active = btn.dataset.mode === mode;
+        btn.classList.toggle('mode-tab--active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      // Focus primary input of new mode
+      const inputs = { base64: elB64Input, url: elUrlInput, jwt: elJwtInput, hash: elHashInput };
+      if (inputs[mode]) inputs[mode].focus();
+      setStatus('—');
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════════ */
+
+    function init() {
+      // Mode tab bar
+      elModeBar.addEventListener('click', e => {
+        const btn = e.target.closest('[data-mode]');
+        if (!btn) return;
+        switchMode(btn.dataset.mode);
+      });
+
+      // Base64 direction buttons
+      elBtnB64Encode.addEventListener('click', () => setB64Direction('encode'));
+      elBtnB64Decode.addEventListener('click', () => setB64Direction('decode'));
+
+      // Base64 live input
+      elB64Input.addEventListener('input', liveBase64);
+
+      // Base64 copy
+      elBtnB64Copy.addEventListener('click', () => copyToClipboard(elB64Output.textContent, elBtnB64Copy));
+
+      // URL direction buttons
+      elBtnUrlEncode.addEventListener('click', () => setUrlDirection('encode'));
+      elBtnUrlDecode.addEventListener('click', () => setUrlDirection('decode'));
+
+      // URL live input
+      elUrlInput.addEventListener('input', liveUrl);
+
+      // URL copy
+      elBtnUrlCopy.addEventListener('click', () => copyToClipboard(elUrlOutput.textContent, elBtnUrlCopy));
+
+      // JWT live input
+      elJwtInput.addEventListener('input', liveJwt);
+
+      // Hash: insecure context banner
+      if (!window.isSecureContext) {
+        elHashOutput.textContent = '';
+        const banner = document.createElement('div');
+        banner.className = 'insecure-banner';
+        banner.textContent = 'ℹ️ Hash requires a secure context (HTTPS or localhost). file:// protocol is not supported.';
+        elHashOutput.parentNode.insertBefore(banner, elHashOutput);
+        elHashAlgo.disabled = true;
+      }
+
+      // Hash algorithm change
+      elHashAlgo.addEventListener('change', () => {
+        appState.hashAlgo = elHashAlgo.value;
+        runHash();
+      });
+
+      // Hash live input
+      elHashInput.addEventListener('input', liveHash);
+
+      // Hash copy
+      elBtnHashCopy.addEventListener('click', () => copyToClipboard(elHashOutput.textContent, elBtnHashCopy));
+
+      // Keyboard shortcuts (all modes; extended in Chronicle 6)
+      document.addEventListener('keydown', e => {
+        const tag  = document.activeElement && document.activeElement.tagName;
+        const ctrl = e.ctrlKey || e.metaKey;
+
+        if (ctrl && e.key === 'Enter') {
+          e.preventDefault();
+          if (appState.mode === 'base64') runBase64();
+          else if (appState.mode === 'url') runUrl();
+          else if (appState.mode === 'jwt') renderJwt();
+          else if (appState.mode === 'hash') runHash();
+          return;
+        }
+        if (e.key === 'Escape') {
+          if (appState.mode === 'base64') {
+            elB64Input.value = '';
+            elB64Output.textContent = '';
+            elB64Input.classList.remove('input--error');
+            setStatus('—');
+          } else if (appState.mode === 'url') {
+            elUrlInput.value = '';
+            elUrlOutput.textContent = '';
+            elUrlInput.classList.remove('input--error');
+            setStatus('—');
+          } else if (appState.mode === 'jwt') {
+            elJwtInput.value = '';
+            elJwtHeader.innerHTML = '';
+            elJwtPayload.innerHTML = '';
+            elJwtSignature.innerHTML = '<span class="jwt-sig-note">&#x26A0;&#xFE0F; Signature not verified (client-side only)</span>';
+            elJwtInput.classList.remove('input--error');
+            setStatus('—');
+          } else if (appState.mode === 'hash') {
+            elHashInput.value = '';
+            elHashOutput.textContent = '';
+            setStatus('—');
+          }
+          return;
+        }
+        // Ctrl+Shift+C — copy active output
+        if (ctrl && e.shiftKey && e.key === 'C') {
+          e.preventDefault();
+          if (appState.mode === 'base64') copyToClipboard(elB64Output.textContent, elBtnB64Copy);
+          else if (appState.mode === 'url')  copyToClipboard(elUrlOutput.textContent, elBtnUrlCopy);
+          else if (appState.mode === 'hash') copyToClipboard(elHashOutput.textContent, elBtnHashCopy);
+          return;
+        }
+        // Number key mode switch (when not in a text/select field)
+        if (!ctrl && !e.shiftKey && !e.altKey && tag !== 'TEXTAREA' && tag !== 'INPUT' && tag !== 'SELECT') {
+          const map = { '1': 'base64', '2': 'url', '3': 'jwt', '4': 'hash' };
+          if (map[e.key]) switchMode(map[e.key]);
+        }
+      });
+
+      // Set initial direction button states
+      elBtnB64Encode.classList.add('btn--active');
+      elBtnUrlEncode.classList.add('btn--active');
+
+      // Initial focus
+      elB64Input.focus();
+    }
+
+    init();
+  </script>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+
+</body>
+</html>

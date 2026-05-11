@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Tracker — LocalKit</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>✅</text></svg>" />
+  <style>
+    /* ═══════════════════════════════════════════════
+       CSS CUSTOM PROPERTIES — Dark Theme (LocalKit)
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-base:         #1e1e1e;
+      --bg-panel:        #252526;
+      --bg-card:         #2d2d2d;
+      --bg-card-hover:   #333334;
+      --bg-input:        #3c3c3c;
+      --bg-input-focus:  #404040;
+      --bg-modal:        #2d2d2d;
+      --bg-header:       #323233;
+
+      --border:          #3e3e3e;
+      --border-focus:    #007acc;
+
+      --text-primary:    #d4d4d4;
+      --text-secondary:  #9d9d9d;
+      --text-muted:      #6b6b6b;
+
+      --accent-blue:     #007acc;
+      --accent-green:    #4ec9b0;
+      --accent-orange:   #ce9178;
+      --accent-yellow:   #dcdcaa;
+      --accent-purple:   #c586c0;
+      --accent-red:      #f44747;
+
+      /* Status colours */
+      --status-pending:     #007acc;
+      --status-in-progress: #dcdcaa;
+      --status-done:        #4ec9b0;
+      --status-blocked:     #f44747;
+
+      --radius:          4px;
+      --radius-lg:       8px;
+      --font-ui:         -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono:       'Consolas', 'Cascadia Code', 'Fira Mono', monospace;
+      --transition:      130ms ease;
+      --header-height:   48px;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:         #f5f5f5;
+      --bg-panel:        #ececec;
+      --bg-card:         #ffffff;
+      --bg-card-hover:   #f0f0f0;
+      --bg-input:        #ffffff;
+      --bg-input-focus:  #f7f7f7;
+      --bg-modal:        #ffffff;
+      --bg-header:       #e0e0e0;
+
+      --border:          #cccccc;
+      --border-focus:    #0066b8;
+
+      --text-primary:    #1e1e1e;
+      --text-secondary:  #555555;
+      --text-muted:      #888888;
+
+      --accent-blue:     #0066b8;
+      --accent-green:    #1a8a76;
+      --accent-orange:   #a0522d;
+      --accent-yellow:   #7a6800;
+      --accent-purple:   #8b008b;
+      --accent-red:      #cc0000;
+
+      --status-pending:     #0066b8;
+      --status-in-progress: #7a6800;
+      --status-done:        #1a8a76;
+      --status-blocked:     #cc0000;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════════ */
+    ::-webkit-scrollbar             { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track       { background: transparent; }
+    ::-webkit-scrollbar-thumb       { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       APP HEADER
+    ═══════════════════════════════════════════════ */
+    .app-header {
+      height: var(--header-height);
+      min-height: var(--header-height);
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .app-header__back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      transition: color var(--transition);
+      padding: 4px 6px;
+      border-radius: var(--radius);
+    }
+
+    .app-header__back:hover {
+      color: var(--text-primary);
+      background: rgba(127,127,127,0.1);
+    }
+
+    .app-header__back-icon { font-size: 16px; }
+
+    .app-header__divider {
+      color: var(--text-muted);
+      font-size: 16px;
+      user-select: none;
+    }
+
+    .app-header__icon { font-size: 18px; }
+
+    .app-header__name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.3px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       APP BODY — sidebar + workspace layout
+    ═══════════════════════════════════════════════ */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       LEFT SIDEBAR — Projects
+    ═══════════════════════════════════════════════ */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .sidebar__heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .sidebar__add-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color var(--transition), background var(--transition);
+    }
+
+    .sidebar__add-btn:hover {
+      color: var(--text-primary);
+      background: rgba(127,127,127,0.1);
+    }
+
+    .sidebar__list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+
+    .sidebar__item {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 8px 0 14px;
+      height: 32px;
+      cursor: pointer;
+      border-radius: 0;
+      transition: background var(--transition);
+      user-select: none;
+    }
+
+    .sidebar__item:hover { background: rgba(127,127,127,0.08); }
+
+    .sidebar__item--active {
+      background: rgba(0, 122, 204, 0.18);
+    }
+
+    .sidebar__item--active .sidebar__item-name {
+      color: var(--accent-blue);
+    }
+
+    .sidebar__item-name {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar__item-del {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color var(--transition), background var(--transition);
+    }
+
+    .sidebar__item:hover .sidebar__item-del { display: flex; }
+
+    .sidebar__item-del:hover {
+      color: var(--accent-red);
+      background: rgba(244,71,71,0.12);
+    }
+
+    /* "All Tasks" pseudo-item */
+    .sidebar__item--all .sidebar__item-name {
+      font-style: normal;
+    }
+
+    /* Special view items (Today, Overdue) */
+    .sidebar__item--today .sidebar__item-name {
+      color: var(--accent-yellow);
+    }
+
+    .sidebar__item--today.sidebar__item--active .sidebar__item-name {
+      color: var(--accent-yellow);
+    }
+
+    .sidebar__item--overdue .sidebar__item-name {
+      color: var(--accent-red);
+    }
+
+    .sidebar__item--overdue.sidebar__item--active .sidebar__item-name {
+      color: var(--accent-red);
+    }
+
+    .sidebar__item--active.sidebar__item--today {
+      background: rgba(220, 220, 170, 0.12);
+    }
+
+    .sidebar__item--active.sidebar__item--overdue {
+      background: rgba(244, 71, 71, 0.12);
+    }
+
+    .sidebar__item--before .sidebar__item-name {
+      color: var(--accent-orange);
+    }
+
+    .sidebar__item--before.sidebar__item--active .sidebar__item-name {
+      color: var(--accent-orange);
+    }
+
+    .sidebar__item--active.sidebar__item--before {
+      background: rgba(206, 145, 120, 0.12);
+    }
+
+    .sidebar__section-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .sidebar__section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 8px 14px 2px;
+      user-select: none;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MAIN CONTENT
+    ═══════════════════════════════════════════════ */
+    .app-main {
+      flex: 1;
+      padding: 32px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       ACTION BAR
+    ═══════════════════════════════════════════════ */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-bar__spacer { flex: 1; }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-group__label {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .filter-select {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .filter-select:focus { border-color: var(--border-focus); }
+
+    .task-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════════
+       TASK LIST — tabular list view
+    ═══════════════════════════════════════════════ */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow-y: auto;
+      max-height: calc(100vh - var(--header-height) - 120px);
+    }
+
+    /* Column layout: title | project | status | due date */
+    .task-list-header,
+    .task-row {
+      display: grid;
+      grid-template-columns: 1fr 160px 120px 120px;
+      align-items: center;
+      gap: 0;
+    }
+
+    .task-list-header {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .task-list-header__cell {
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .task-row {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .task-row:last-child { border-bottom: none; }
+
+    .task-row:hover { background: var(--bg-card-hover); }
+
+    .task-row--done { opacity: 0.6; }
+
+    .task-row__cell {
+      padding: 11px 14px;
+      overflow: hidden;
+    }
+
+    .task-row__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-row--done .task-row__title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .task-row__project {
+      font-size: 12px;
+      color: var(--accent-purple);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-row__date {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    .task-row__date--overdue {
+      color: var(--accent-red);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════
+       STATUS BADGE
+    ═══════════════════════════════════════════════ */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .status--pending {
+      color: var(--status-pending);
+      border-color: var(--status-pending);
+      background: rgba(0, 122, 204, 0.1);
+    }
+
+    .status--in-progress {
+      color: var(--status-in-progress);
+      border-color: var(--status-in-progress);
+      background: rgba(220, 220, 170, 0.1);
+    }
+
+    .status--done {
+      color: var(--status-done);
+      border-color: var(--status-done);
+      background: rgba(78, 201, 176, 0.1);
+    }
+
+    .status--blocked {
+      color: var(--status-blocked);
+      border-color: var(--status-blocked);
+      background: rgba(244, 71, 71, 0.1);
+    }
+
+    /* ═══════════════════════════════════════════════
+       EMPTY STATE
+    ═══════════════════════════════════════════════ */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .empty-state__icon {
+      font-size: 48px;
+      opacity: 0.4;
+    }
+
+    .empty-state__heading {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .empty-state__sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ═══════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: var(--font-ui);
+      padding: 7px 16px;
+      transition: background var(--transition), color var(--transition), opacity var(--transition);
+      outline: none;
+      white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .btn--primary {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    .btn--primary:hover { background: #1a8ad4; }
+
+    .btn--ghost {
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+
+    .btn--ghost:hover {
+      color: var(--text-primary);
+      background: rgba(127,127,127,0.1);
+    }
+
+    .btn--danger {
+      background: rgba(244, 71, 71, 0.12);
+      color: var(--accent-red);
+      border: 1px solid rgba(244, 71, 71, 0.3);
+    }
+
+    .btn--danger:hover {
+      background: rgba(244, 71, 71, 0.22);
+    }
+
+    /* ═══════════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════════ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.hidden { display: none; }
+
+    .modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal__box {
+      position: relative;
+      background: var(--bg-modal);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 480px;
+      max-width: 94vw;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    .modal__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal__actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .modal__actions-right {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .modal__delete { flex-shrink: 0; }
+
+    /* ═══════════════════════════════════════════════
+       FORM ELEMENTS (inside modal)
+    ═══════════════════════════════════════════════ */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group--half { flex: 1; }
+
+    .form-row {
+      display: flex;
+      gap: 14px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.3px;
+    }
+
+    .form-required { color: var(--accent-red); }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font-ui);
+      outline: none;
+      transition: border-color var(--transition);
+      width: 100%;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--border-focus);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
+
+    .form-select { cursor: pointer; }
+
+    /* Date input calendar icon */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6);
+      cursor: pointer;
+    }
+    html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.3);
+    }
+
+    /* ═══════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════ */
+    .app-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MODAL ANIMATION
+    ═══════════════════════════════════════════════ */
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+
+    .modal:not(.hidden) .modal__box {
+      animation: modalFadeIn 160ms ease forwards;
+    }
+
+    /* ═══════════════════════════════════════════════
+       TASK ROW — focus ring for keyboard navigation
+    ═══════════════════════════════════════════════ */
+    .task-row:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: -2px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SIDEBAR ITEM — focus ring for keyboard navigation
+    ═══════════════════════════════════════════════ */
+    .sidebar__item:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: -2px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════════ */
+    .hidden { display: none !important; }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .app-main { padding: 20px 16px; gap: 16px; }
+      .task-list-header { display: none; }
+      .task-row,
+      .task-list-header { grid-template-columns: 1fr 90px; }
+      .task-row__cell:nth-child(2),
+      .task-row__cell:nth-child(3) { display: none; }
+      .form-row  { flex-direction: column; }
+      .action-bar { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       APP HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <a href="../index.html" class="app-header__back" title="Back to LocalKit">
+      <span class="app-header__back-icon">🧰</span>
+      <span class="app-header__back-label">LocalKit</span>
+    </a>
+    <span class="app-header__divider">/</span>
+    <span class="app-header__icon">✅</span>
+    <span class="app-header__name">Task Tracker</span>
+    <div style="flex:1"></div>
+    <button id="btn-export" class="btn btn--ghost" title="Export tasks as JSON" style="font-size:12px;padding:5px 12px;">💾 Export</button>
+    <button id="btn-import" class="btn btn--ghost" title="Import tasks from JSON" style="font-size:12px;padding:5px 12px;">📂 Import</button>
+    <input type="file" id="import-file-input" accept=".json" style="display:none" />
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 130ms ease;margin-left:4px;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       APP BODY — sidebar + main
+  ═══════════════════════════════════════════════════════ -->
+  <div class="app-body">
+
+    <!-- ── Left Sidebar — Projects ──────────────────────── -->
+    <nav class="sidebar" aria-label="Projects">
+      <div class="sidebar__header">
+        <span class="sidebar__heading">Projects</span>
+        <button id="btn-new-project" class="sidebar__add-btn" title="New project">＋</button>
+      </div>
+      <div class="sidebar__list" id="sidebar-project-list">
+        <!-- items rendered by JS -->
+      </div>
+    </nav>
+
+    <!-- ── Main Workspace ───────────────────────────────── -->
+    <main class="app-main">
+
+      <!-- ── Action Bar ─────────────────────────────────── -->
+      <div class="action-bar">
+
+        <!-- Filter by Status -->
+        <div class="filter-group">
+          <label class="filter-group__label" for="filter-status">Status</label>
+          <select id="filter-status" class="filter-select">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="done">Done</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+
+        <!-- Sort -->
+        <div class="filter-group">
+          <label class="filter-group__label" for="sort-by">Sort by</label>
+          <select id="sort-by" class="filter-select">
+            <option value="target-asc">Due date (soonest)</option>
+            <option value="target-desc">Due date (latest)</option>
+            <option value="project-asc">Project (A → Z)</option>
+            <option value="title-asc">Title (A → Z)</option>
+          </select>
+        </div>
+
+        <!-- Spacer -->
+        <div class="action-bar__spacer"></div>
+
+        <!-- Task count badge -->
+        <span id="task-count" class="task-count"></span>
+
+        <!-- Add Task button -->
+        <button id="btn-add-task" class="btn btn--primary">
+          <span>＋</span> Add Task
+        </button>
+
+      </div>
+
+      <!-- ── Task List ───────────────────────────────────── -->
+      <div id="task-list" class="task-list">
+        <!-- Header row + task rows rendered by JS -->
+      </div>
+
+      <!-- ── Empty State ─────────────────────────────────── -->
+      <div id="empty-state" class="empty-state hidden">
+        <span class="empty-state__icon">📋</span>
+        <p class="empty-state__heading">No tasks yet</p>
+        <p class="empty-state__sub">Click <strong>＋ Add Task</strong> to get started.</p>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════════════════ -->
+  <footer class="app-footer">
+    LocalKit — zero install, zero dependencies, runs entirely in your browser
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODAL — Add / Edit Task
+  ═══════════════════════════════════════════════════════ -->
+  <div id="modal-task" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-task-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box">
+
+      <h2 class="modal__title" id="modal-task-title">New Task</h2>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label" for="task-title">Title <span class="form-required">*</span></label>
+        <input
+          type="text"
+          id="task-title"
+          class="form-input"
+          placeholder="What needs to be done?"
+          autocomplete="off"
+          maxlength="200"
+        />
+      </div>
+
+      <!-- Project -->
+      <div class="form-group">
+        <label class="form-label" for="task-project">Project</label>
+        <select id="task-project" class="form-select">
+          <option value="">— No Project —</option>
+        </select>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label class="form-label" for="task-notes">Notes</label>
+        <textarea
+          id="task-notes"
+          class="form-textarea"
+          placeholder="Additional details, links, context…"
+          rows="4"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <!-- Status + Target Date (side by side) -->
+      <div class="form-row">
+        <div class="form-group form-group--half">
+          <label class="form-label" for="task-status">Status</label>
+          <select id="task-status" class="form-select">
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="done">Done</option>
+            <option value="blocked">Blocked</option>
+          </select>
+        </div>
+        <div class="form-group form-group--half">
+          <label class="form-label" for="task-target-date">Target Date <span class="form-required">*</span></label>
+          <input
+            type="date"
+            id="task-target-date"
+            class="form-input"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="modal__actions">
+        <!-- Delete button (only visible in edit mode) -->
+        <button id="btn-delete-task" class="btn btn--danger modal__delete hidden">Delete</button>
+        <div class="modal__actions-right">
+          <button id="btn-modal-cancel" class="btn btn--ghost">Cancel</button>
+          <button id="btn-modal-confirm" class="btn btn--primary">Create Task</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ═══════════════════════════════════════════════════════════
+       CONSTANTS
+    ═══════════════════════════════════════════════════════════ */
+    const LS_KEY          = 'localkit_tasks';
+    const LS_KEY_PROJECTS = 'localkit_projects';
+
+    /* ═══════════════════════════════════════════════════════════
+       APP STATE
+    ═══════════════════════════════════════════════════════════ */
+    const appState = {
+      /** @type {Task[]} */
+      tasks: [],
+
+      /** @type {string[]} — ordered list of project names */
+      projects: [],
+
+      /** Runtime filter / sort — not persisted */
+      filterStatus:  'all',       // 'all' | 'pending' | 'in-progress' | 'done' | 'blocked'
+      filterProject: 'all',       // 'all' | <project name>
+      sortBy: 'target-asc',       // 'target-asc' | 'target-desc' | 'project-asc' | 'title-asc'
+
+      /** Track which task is being edited (null = add mode) */
+      editingTaskId: null,
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       TASK SCHEMA
+       {
+         id:         string   — crypto.randomUUID()
+         title:      string   — required, max 200 chars
+         project:    string   — optional, free-text with datalist autocomplete
+         notes:      string   — optional
+         status:     'pending' | 'in-progress' | 'done' | 'blocked'
+         targetDate: string | null  — 'YYYY-MM-DD' or null
+         createdAt:  string   — ISO 8601
+       }
+    ═══════════════════════════════════════════════════════════ */
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — UUID
+    ═══════════════════════════════════════════════════════════ */
+    function uid() {
+      return crypto.randomUUID();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       PERSISTENCE — Load / Save
+    ═══════════════════════════════════════════════════════════ */
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        appState.tasks = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(appState.tasks)) appState.tasks = [];
+      } catch {
+        appState.tasks = [];
+      }
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(appState.tasks));
+      } catch (e) {
+        console.error('LocalKit Task Tracker: failed to save tasks', e);
+      }
+    }
+
+    function loadProjects() {
+      try {
+        const raw = localStorage.getItem(LS_KEY_PROJECTS);
+        appState.projects = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(appState.projects)) appState.projects = [];
+      } catch {
+        appState.projects = [];
+      }
+      // Backfill: merge any project names from existing tasks that aren't in the list yet
+      appState.tasks.forEach(t => {
+        if (t.project && !appState.projects.includes(t.project)) {
+          appState.projects.push(t.project);
+        }
+      });
+      appState.projects.sort((a, b) => a.localeCompare(b));
+    }
+
+    function saveProjects() {
+      try {
+        localStorage.setItem(LS_KEY_PROJECTS, JSON.stringify(appState.projects));
+      } catch (e) {
+        console.error('LocalKit Task Tracker: failed to save projects', e);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — Build a new task object
+    ═══════════════════════════════════════════════════════════ */
+    function createTask({ title, project = '', notes = '', status = 'pending', targetDate = null }) {
+      return {
+        id:         uid(),
+        title:      title.trim(),
+        project:    project.trim(),
+        notes:      notes.trim(),
+        status,
+        targetDate: targetDate || null,
+        createdAt:  new Date().toISOString(),
+      };
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SIDEBAR — render project list
+    ═══════════════════════════════════════════════════════════ */
+    function renderSidebar() {
+      const list = document.getElementById('sidebar-project-list');
+      list.innerHTML = '';
+
+      // ── Smart Views section label ──────────────────────────
+      const viewsLabel = document.createElement('div');
+      viewsLabel.className = 'sidebar__section-label';
+      viewsLabel.textContent = 'Views';
+      list.appendChild(viewsLabel);
+
+      // "Today's Tasks" item
+      const todayItem = document.createElement('div');
+      todayItem.className = 'sidebar__item sidebar__item--today' +
+        (appState.filterProject === '__today__' ? ' sidebar__item--active' : '');
+      todayItem.dataset.project = '__today__';
+      todayItem.setAttribute('role', 'button');
+      todayItem.tabIndex = 0;
+      const todayName = document.createElement('span');
+      todayName.className = 'sidebar__item-name';
+      todayName.textContent = '📅 Today';
+      todayItem.appendChild(todayName);
+      list.appendChild(todayItem);
+
+      // "Overdue Tasks" item
+      const overdueItem = document.createElement('div');
+      overdueItem.className = 'sidebar__item sidebar__item--overdue' +
+        (appState.filterProject === '__overdue__' ? ' sidebar__item--active' : '');
+      overdueItem.dataset.project = '__overdue__';
+      overdueItem.setAttribute('role', 'button');
+      overdueItem.tabIndex = 0;
+      const overdueName = document.createElement('span');
+      overdueName.className = 'sidebar__item-name';
+      overdueName.textContent = '⚠ Overdue';
+      overdueItem.appendChild(overdueName);
+      list.appendChild(overdueItem);
+
+      // "Before Today" item
+      const beforeItem = document.createElement('div');
+      beforeItem.className = 'sidebar__item sidebar__item--before' +
+        (appState.filterProject === '__before__' ? ' sidebar__item--active' : '');
+      beforeItem.dataset.project = '__before__';
+      beforeItem.setAttribute('role', 'button');
+      beforeItem.tabIndex = 0;
+      const beforeName = document.createElement('span');
+      beforeName.className = 'sidebar__item-name';
+      beforeName.textContent = '🗂 Before Today';
+      beforeItem.appendChild(beforeName);
+      list.appendChild(beforeItem);
+
+      // "All Tasks" item
+      const allItem = document.createElement('div');
+      allItem.className = 'sidebar__item sidebar__item--all' +
+        (appState.filterProject === 'all' ? ' sidebar__item--active' : '');
+      allItem.dataset.project = 'all';
+      allItem.setAttribute('role', 'button');
+      allItem.tabIndex = 0;
+      const allName = document.createElement('span');
+      allName.className = 'sidebar__item-name';
+      allName.textContent = 'All Tasks';
+      allItem.appendChild(allName);
+      list.appendChild(allItem);
+
+      // ── Projects section separator + label ────────────────
+      const sep = document.createElement('div');
+      sep.className = 'sidebar__section-sep';
+      list.appendChild(sep);
+
+      const projLabel = document.createElement('div');
+      projLabel.className = 'sidebar__section-label';
+      projLabel.textContent = 'Projects';
+      list.appendChild(projLabel);
+
+      // Project items
+      appState.projects.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'sidebar__item' +
+          (appState.filterProject === p ? ' sidebar__item--active' : '');
+        item.dataset.project = p;
+        item.setAttribute('role', 'button');
+        item.tabIndex = 0;
+
+        const name = document.createElement('span');
+        name.className = 'sidebar__item-name';
+        name.textContent = p;
+        item.appendChild(name);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'sidebar__item-del';
+        delBtn.title = `Delete project "${p}"`;
+        delBtn.dataset.deleteProject = p;
+        delBtn.textContent = '✕';
+        item.appendChild(delBtn);
+
+        list.appendChild(item);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SIDEBAR — init interactions
+    ═══════════════════════════════════════════════════════════ */
+    function initSidebar() {
+      const list = document.getElementById('sidebar-project-list');
+
+      // New project button
+      document.getElementById('btn-new-project').addEventListener('click', () => {
+        const name = prompt('Project name:');
+        if (!name || !name.trim()) return;
+        const trimmed = name.trim();
+        if (appState.projects.includes(trimmed)) {
+          alert(`Project "${trimmed}" already exists.`);
+          return;
+        }
+        appState.projects.push(trimmed);
+        appState.projects.sort((a, b) => a.localeCompare(b));
+        saveProjects();
+        renderSidebar();
+        updateModalProjectSelect();
+      });
+
+      // Click delegation on sidebar list
+      list.addEventListener('click', (e) => {
+        // Delete project button
+        const delBtn = e.target.closest('[data-delete-project]');
+        if (delBtn) {
+          e.stopPropagation();
+          const projName = delBtn.dataset.deleteProject;
+          if (!confirm(`Delete project "${projName}"?\nTasks in this project will not be deleted — they will become unassigned.`)) return;
+          appState.projects = appState.projects.filter(p => p !== projName);
+          // Clear project field on tasks that referenced it
+          appState.tasks.forEach(t => { if (t.project === projName) t.project = ''; });
+          saveTasks();
+          saveProjects();
+          if (appState.filterProject === projName) appState.filterProject = 'all';
+          renderSidebar();
+          updateModalProjectSelect();
+          renderTaskList();
+          return;
+        }
+
+        // Select project filter
+        const item = e.target.closest('.sidebar__item');
+        if (!item) return;
+        appState.filterProject = item.dataset.project;
+        renderSidebar();
+        renderTaskList();
+      });
+
+      // Keyboard navigation on sidebar items
+      list.addEventListener('keydown', (e) => {
+        const item = e.target.closest('.sidebar__item');
+        if (!item) return;
+
+        // Enter / Space — select this project filter
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          appState.filterProject = item.dataset.project;
+          renderSidebar();
+          renderTaskList();
+          return;
+        }
+
+        // ArrowUp / ArrowDown — navigate between sidebar items
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const items = Array.from(list.querySelectorAll('.sidebar__item'));
+          const currentIndex = items.indexOf(item);
+          const nextIndex = e.key === 'ArrowDown'
+            ? Math.min(currentIndex + 1, items.length - 1)
+            : Math.max(currentIndex - 1, 0);
+          items[nextIndex].focus();
+          return;
+        }
+
+        // ArrowRight — move focus to the task list
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const rows = Array.from(document.querySelectorAll('.task-row'));
+          if (rows.length > 0) rows[0].focus();
+          return;
+        }
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — refresh project <select> in modal
+    ═══════════════════════════════════════════════════════════ */
+    function updateModalProjectSelect() {
+      const sel = document.getElementById('task-project');
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">— No Project —</option>';
+      appState.projects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        sel.appendChild(opt);
+      });
+      // Restore selection if still valid
+      if (prev && [...sel.options].some(o => o.value === prev)) {
+        sel.value = prev;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — Date helpers
+    ═══════════════════════════════════════════════════════════ */
+    /**
+     * Returns true if a YYYY-MM-DD date string is strictly before today
+     * and the task status is not 'done'.
+     */
+    function isOverdue(targetDate, status) {
+      if (!targetDate || status === 'done') return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(targetDate + 'T00:00:00');
+      return target < today;
+    }
+
+    /**
+     * Format a YYYY-MM-DD string to a human-readable label.
+     * e.g. "Apr 20, 2026"
+     */
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch {
+        return dateStr;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       STATUS HELPERS
+    ═══════════════════════════════════════════════════════════ */
+    const STATUS_LABELS = {
+      'pending':     'Pending',
+      'in-progress': 'In Progress',
+      'done':        'Done',
+      'blocked':     'Blocked',
+    };
+
+    function statusClass(status) {
+      return `status--${status}`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FILTER & SORT — returns a derived task array
+    ═══════════════════════════════════════════════════════════ */
+    function getFilteredSortedTasks() {
+      let tasks = appState.tasks.slice();
+
+      // Filter by status
+      if (appState.filterStatus !== 'all') {
+        tasks = tasks.filter(t => t.status === appState.filterStatus);
+      }
+
+      // Filter by special views or project
+      if (appState.filterProject === '__today__') {
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        tasks = tasks.filter(t => t.targetDate === todayStr);
+      } else if (appState.filterProject === '__overdue__') {
+        tasks = tasks.filter(t => isOverdue(t.targetDate, t.status));
+      } else if (appState.filterProject === '__before__') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        tasks = tasks.filter(t => {
+          if (!t.targetDate) return false;
+          return new Date(t.targetDate + 'T00:00:00') < today;
+        });
+      } else if (appState.filterProject !== 'all') {
+        tasks = tasks.filter(t => t.project === appState.filterProject);
+      }
+
+      // Sort
+      switch (appState.sortBy) {
+        case 'target-asc':
+          tasks.sort((a, b) => {
+            if (!a.targetDate && !b.targetDate) return 0;
+            if (!a.targetDate) return 1;
+            if (!b.targetDate) return -1;
+            return a.targetDate.localeCompare(b.targetDate);
+          });
+          break;
+        case 'target-desc':
+          tasks.sort((a, b) => {
+            if (!a.targetDate && !b.targetDate) return 0;
+            if (!a.targetDate) return 1;
+            if (!b.targetDate) return -1;
+            return b.targetDate.localeCompare(a.targetDate);
+          });
+          break;
+        case 'project-asc':
+          tasks.sort((a, b) => (a.project || '').localeCompare(b.project || ''));
+          break;
+        case 'title-asc':
+          tasks.sort((a, b) => a.title.localeCompare(b.title));
+          break;
+        default:
+          tasks.sort((a, b) => {
+            if (!a.targetDate && !b.targetDate) return 0;
+            if (!a.targetDate) return 1;
+            if (!b.targetDate) return -1;
+            return a.targetDate.localeCompare(b.targetDate);
+          });
+          break;
+      }
+
+      return tasks;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RENDER TASK LIST
+    ═══════════════════════════════════════════════════════════ */
+    function renderTaskList() {
+      const listEl      = document.getElementById('task-list');
+      const emptyEl     = document.getElementById('empty-state');
+      const countEl     = document.getElementById('task-count');
+      const tasks       = getFilteredSortedTasks();
+      const totalCount  = appState.tasks.length;
+
+      // Update count label
+      if (totalCount === 0) {
+        countEl.textContent = '';
+      } else {
+        const shown = tasks.length;
+        countEl.textContent = shown === totalCount
+          ? `${totalCount} task${totalCount !== 1 ? 's' : ''}`
+          : `${shown} of ${totalCount} task${totalCount !== 1 ? 's' : ''}`;
+      }
+
+      // Clear list
+      listEl.innerHTML = '';
+
+      if (tasks.length === 0) {
+        listEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+
+        // Contextual empty-state message
+        if (totalCount === 0) {
+          emptyEl.querySelector('.empty-state__heading').textContent = 'No tasks yet';
+          emptyEl.querySelector('.empty-state__sub').innerHTML =
+            'Click <strong>＋ Add Task</strong> to get started.';
+        } else if (appState.filterProject === '__today__') {
+          emptyEl.querySelector('.empty-state__heading').textContent = 'No tasks due today';
+          emptyEl.querySelector('.empty-state__sub').innerHTML =
+            'Tasks with today\'s due date will appear here.';
+        } else if (appState.filterProject === '__overdue__') {
+          emptyEl.querySelector('.empty-state__heading').textContent = 'No overdue tasks';
+          emptyEl.querySelector('.empty-state__sub').innerHTML =
+            'All caught up! No tasks are past their due date.';
+        } else if (appState.filterProject === '__before__') {
+          emptyEl.querySelector('.empty-state__heading').textContent = 'No tasks before today';
+          emptyEl.querySelector('.empty-state__sub').innerHTML =
+            'No tasks have a due date before today.';
+        } else {
+          emptyEl.querySelector('.empty-state__heading').textContent = 'No matching tasks';
+          emptyEl.querySelector('.empty-state__sub').innerHTML =
+            'Try changing the status filter.';
+        }
+        return;
+      }
+
+      listEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+
+      // ── List header row ─────────────────────────────────────
+      const headerRow = document.createElement('div');
+      headerRow.className = 'task-list-header';
+      ['Title', 'Project', 'Status', 'Due Date'].forEach(label => {
+        const cell = document.createElement('div');
+        cell.className = 'task-list-header__cell';
+        cell.textContent = label;
+        headerRow.appendChild(cell);
+      });
+      listEl.appendChild(headerRow);
+
+      // ── Task rows ───────────────────────────────────────────
+      tasks.forEach(task => {
+        const row = document.createElement('div');
+        row.className = 'task-row' + (task.status === 'done' ? ' task-row--done' : '');
+        row.dataset.id = task.id;
+        row.tabIndex = 0;
+        row.setAttribute('role', 'button');
+        row.setAttribute('aria-label', `Edit task: ${task.title}`);
+
+        // ── Title cell ────────────────────────────────────────
+        const titleCell = document.createElement('div');
+        titleCell.className = 'task-row__cell';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'task-row__title';
+        titleEl.textContent = task.title;
+        titleCell.appendChild(titleEl);
+        row.appendChild(titleCell);
+
+        // ── Project cell ──────────────────────────────────────
+        const projCell = document.createElement('div');
+        projCell.className = 'task-row__cell';
+        if (task.project) {
+          const projEl = document.createElement('div');
+          projEl.className = 'task-row__project';
+          projEl.textContent = task.project;
+          projCell.appendChild(projEl);
+        }
+        row.appendChild(projCell);
+
+        // ── Status cell ───────────────────────────────────────
+        const statusCell = document.createElement('div');
+        statusCell.className = 'task-row__cell';
+        const badge = document.createElement('span');
+        badge.className = `status-badge ${statusClass(task.status)}`;
+        badge.textContent = STATUS_LABELS[task.status] || task.status;
+        statusCell.appendChild(badge);
+        row.appendChild(statusCell);
+
+        // ── Due date cell ─────────────────────────────────────
+        const dateCell = document.createElement('div');
+        dateCell.className = 'task-row__cell';
+        if (task.targetDate) {
+          const overdue = isOverdue(task.targetDate, task.status);
+          const dateEl = document.createElement('div');
+          dateEl.className = 'task-row__date' + (overdue ? ' task-row__date--overdue' : '');
+          dateEl.textContent = (overdue ? '⚠ ' : '') + formatDate(task.targetDate);
+          dateCell.appendChild(dateEl);
+        }
+        row.appendChild(dateCell);
+
+        listEl.appendChild(row);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODAL — open / close helpers
+    ═══════════════════════════════════════════════════════════ */
+    function openModal() {
+      document.getElementById('modal-task').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-task').classList.add('hidden');
+      appState.editingTaskId = null;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODAL — reset form to "Add" mode
+    ═══════════════════════════════════════════════════════════ */
+    function resetModalForAdd() {
+      // Default target date to today (YYYY-MM-DD)
+      const today = new Date();
+      const yyyy  = today.getFullYear();
+      const mm    = String(today.getMonth() + 1).padStart(2, '0');
+      const dd    = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      document.getElementById('modal-task-title').textContent = 'New Task';
+      document.getElementById('task-title').value        = '';
+      document.getElementById('task-project').value      = '';
+      document.getElementById('task-notes').value        = '';
+      document.getElementById('task-status').value       = 'pending';
+      document.getElementById('task-target-date').value  = todayStr;
+      document.getElementById('btn-modal-confirm').textContent = 'Create Task';
+      document.getElementById('btn-delete-task').classList.add('hidden');
+      appState.editingTaskId = null;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODAL — read form values
+    ═══════════════════════════════════════════════════════════ */
+    function readModalForm() {
+      return {
+        title:      document.getElementById('task-title').value.trim(),
+        project:    document.getElementById('task-project').value.trim(),
+        notes:      document.getElementById('task-notes').value.trim(),
+        status:     document.getElementById('task-status').value,
+        targetDate: document.getElementById('task-target-date').value || null,
+      };
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       MODAL — confirm handler (add mode)
+    ═══════════════════════════════════════════════════════════ */
+    function handleModalConfirm() {
+      const { title, project, notes, status, targetDate } = readModalForm();
+
+      if (!title) {
+        const titleInput = document.getElementById('task-title');
+        titleInput.focus();
+        titleInput.style.borderColor = 'var(--accent-red)';
+        setTimeout(() => { titleInput.style.borderColor = ''; }, 1500);
+        return;
+      }
+
+      if (!targetDate) {
+        const dateInput = document.getElementById('task-target-date');
+        dateInput.focus();
+        dateInput.style.borderColor = 'var(--accent-red)';
+        setTimeout(() => { dateInput.style.borderColor = ''; }, 1500);
+        return;
+      }
+
+      if (appState.editingTaskId === null) {
+        // ── Add mode ──────────────────────────────────────────
+        const task = createTask({ title, project, notes, status, targetDate });
+        appState.tasks.unshift(task);  // newest first in raw array
+      } else {
+        // ── Edit mode ─────────────────────────────────────────
+        const idx = appState.tasks.findIndex(t => t.id === appState.editingTaskId);
+        if (idx !== -1) {
+          appState.tasks[idx] = {
+            ...appState.tasks[idx],
+            title,
+            project,
+            notes,
+            status,
+            targetDate: targetDate || null,
+          };
+        }
+      }
+
+      saveTasks();
+      renderTaskList();
+      closeModal();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       INIT MODAL — wire up all modal interactions
+    ═══════════════════════════════════════════════════════════ */
+    function initModal() {
+      const modal = document.getElementById('modal-task');
+
+      // ── Open modal via "Add Task" button ──────────────────────
+      document.getElementById('btn-add-task').addEventListener('click', () => {
+        resetModalForAdd();
+        openModal();
+        setTimeout(() => document.getElementById('task-title').focus(), 50);
+      });
+
+      // ── Close on backdrop click ───────────────────────────────
+      modal.querySelector('.modal__backdrop').addEventListener('click', closeModal);
+
+      // ── Cancel button ─────────────────────────────────────────
+      document.getElementById('btn-modal-cancel').addEventListener('click', closeModal);
+
+      // ── Confirm button ────────────────────────────────────────
+      document.getElementById('btn-modal-confirm').addEventListener('click', handleModalConfirm);
+
+      // ── Enter in title field submits modal ────────────────────
+      document.getElementById('task-title').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleModalConfirm();
+      });
+
+      // ── Escape closes modal ───────────────────────────────────
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       EDIT TASK — open modal pre-filled
+    ═══════════════════════════════════════════════════════════ */
+    function openEditModal(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      appState.editingTaskId = taskId;
+
+      document.getElementById('modal-task-title').textContent     = 'Edit Task';
+      document.getElementById('task-title').value                  = task.title;
+      document.getElementById('task-notes').value                  = task.notes || '';
+      updateModalProjectSelect();
+      document.getElementById('task-project').value                = task.project || '';
+      document.getElementById('task-status').value                 = task.status;
+      document.getElementById('task-target-date').value            = task.targetDate || '';
+      document.getElementById('btn-modal-confirm').textContent     = 'Save Changes';
+      document.getElementById('btn-delete-task').classList.remove('hidden');
+
+      openModal();
+      setTimeout(() => document.getElementById('task-title').focus(), 50);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DELETE TASK — called from Delete button inside edit modal
+    ═══════════════════════════════════════════════════════════ */
+    function initDeleteTask() {
+      document.getElementById('btn-delete-task').addEventListener('click', () => {
+        const taskId = appState.editingTaskId;
+        if (!taskId) return;
+
+        const task = appState.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (!confirm(`Delete "${task.title}"?\nThis cannot be undone.`)) return;
+
+        appState.tasks = appState.tasks.filter(t => t.id !== taskId);
+        saveTasks();
+        renderTaskList();
+        closeModal();
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       TASK CARD CLICK → open edit modal
+    ═══════════════════════════════════════════════════════════ */
+    function initTaskCardClick() {
+      document.getElementById('task-list').addEventListener('click', (e) => {
+        const row = e.target.closest('.task-row');
+        if (!row) return;
+        openEditModal(row.dataset.id);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       INIT FILTERS & SORT — wire up action bar controls
+    ═══════════════════════════════════════════════════════════ */
+    function initFilters() {
+      // Status filter
+      const filterSel = document.getElementById('filter-status');
+      filterSel.value = appState.filterStatus;
+      filterSel.addEventListener('change', () => {
+        appState.filterStatus = filterSel.value;
+        renderTaskList();
+      });
+
+      // Sort
+      const sortSel = document.getElementById('sort-by');
+      sortSel.value = appState.sortBy;
+      sortSel.addEventListener('change', () => {
+        appState.sortBy = sortSel.value;
+        renderTaskList();
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       EXPORT TASKS — download { tasks: [...] } as JSON file
+    ═══════════════════════════════════════════════════════════ */
+    function initExportTasks() {
+      document.getElementById('btn-export').addEventListener('click', () => {
+        if (appState.tasks.length === 0) {
+          alert('No tasks to export.');
+          return;
+        }
+        const payload = JSON.stringify({ tasks: appState.tasks }, null, 2);
+        const blob = new Blob([payload], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        const ts   = new Date().toISOString().slice(0, 10);
+        a.href     = url;
+        a.download = `localkit-tasks-${ts}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       IMPORT TASKS — merge from a { tasks: [...] } JSON file
+    ═══════════════════════════════════════════════════════════ */
+    function initImportTasks() {
+      const btn   = document.getElementById('btn-import');
+      const input = document.getElementById('import-file-input');
+
+      btn.addEventListener('click', () => { input.value = ''; input.click(); });
+
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            const incoming = Array.isArray(parsed.tasks) ? parsed.tasks : [];
+            if (incoming.length === 0) {
+              alert('No tasks found in the imported file.');
+              return;
+            }
+            // Assign fresh UUIDs to avoid ID collisions
+            const imported = incoming.map(t => ({
+              ...t,
+              id: uid(),
+              title:      (t.title || '').trim()     || 'Untitled',
+              project:    (t.project || '').trim(),
+              notes:      (t.notes || '').trim(),
+              status:     ['pending','in-progress','done','blocked'].includes(t.status) ? t.status : 'pending',
+              targetDate: t.targetDate || null,
+              createdAt:  t.createdAt  || new Date().toISOString(),
+            }));
+            appState.tasks = [...appState.tasks, ...imported];
+            // Backfill any new project names from imported tasks
+            imported.forEach(t => {
+              if (t.project && !appState.projects.includes(t.project)) {
+                appState.projects.push(t.project);
+              }
+            });
+            appState.projects.sort((a, b) => a.localeCompare(b));
+            saveTasks();
+            saveProjects();
+            renderSidebar();
+            updateModalProjectSelect();
+            renderTaskList();
+            alert(`Imported ${imported.length} task${imported.length !== 1 ? 's' : ''}.`);
+          } catch {
+            alert('Failed to parse JSON. Please check the file format.');
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       BOOT
+    ═══════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════
+       KEYBOARD SHORTCUTS
+       - N / n      → open "Add Task" modal (when no modal is open)
+       - ↑ / ↓      → navigate task rows
+       - ← (on row) → move focus to projects sidebar
+       - ↑ / ↓      → navigate sidebar items (when sidebar focused)
+       - → (on sidebar item) → move focus back to task list
+       - Enter / E  → edit focused task row
+       - Enter / Space (on sidebar) → select project filter
+    ═══════════════════════════════════════════════════════════ */
+    function initKeyboardShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('modal-task');
+        const modalOpen = !modal.classList.contains('hidden');
+
+        // Skip if user is typing in an input / textarea / select
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+
+        if (modalOpen) return;
+
+        // N → open Add Task modal
+        if (!isInput && (e.key === 'n' || e.key === 'N')) {
+          e.preventDefault();
+          document.getElementById('btn-add-task').click();
+          return;
+        }
+
+        // Enter or E on a focused task row → open edit modal
+        if (e.key === 'Enter' || (!isInput && (e.key === 'e' || e.key === 'E'))) {
+          const row = document.activeElement ? document.activeElement.closest('.task-row') : null;
+          if (row) {
+            e.preventDefault();
+            openEditModal(row.dataset.id);
+            return;
+          }
+        }
+
+        // ArrowDown / ArrowUp — navigate between task rows
+        // (skip if a sidebar item is focused — sidebar handles its own arrow navigation)
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          const isSidebarFocused = document.activeElement
+            ? !!document.activeElement.closest('.sidebar__item')
+            : false;
+          if (isSidebarFocused) return;
+
+          const rows = Array.from(document.querySelectorAll('.task-row'));
+          if (rows.length === 0) return;
+
+          const current = document.activeElement ? document.activeElement.closest('.task-row') : null;
+          let nextIndex;
+
+          if (!current) {
+            // Nothing focused yet — focus first (Down) or last (Up) row
+            nextIndex = e.key === 'ArrowDown' ? 0 : rows.length - 1;
+          } else {
+            const currentIndex = rows.indexOf(current);
+            nextIndex = e.key === 'ArrowDown'
+              ? Math.min(currentIndex + 1, rows.length - 1)
+              : Math.max(currentIndex - 1, 0);
+          }
+
+          e.preventDefault();
+          rows[nextIndex].focus();
+          return;
+        }
+
+        // ArrowLeft on a task row — move focus to the active sidebar item (or first item)
+        if (e.key === 'ArrowLeft') {
+          const currentRow = document.activeElement ? document.activeElement.closest('.task-row') : null;
+          if (!currentRow) return;
+          e.preventDefault();
+          const sidebarList = document.getElementById('sidebar-project-list');
+          // Focus the currently-active sidebar item, falling back to the first item
+          const activeItem = sidebarList.querySelector('.sidebar__item--active')
+                          || sidebarList.querySelector('.sidebar__item');
+          if (activeItem) activeItem.focus();
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTasks();
+      loadProjects();
+      renderSidebar();
+      initSidebar();
+      updateModalProjectSelect();
+      initModal();
+      initDeleteTask();
+      initTaskCardClick();
+      initFilters();
+      initExportTasks();
+      initImportTasks();
+      initKeyboardShortcuts();
+      renderTaskList();
+    });
+  </script>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+
+</body>
+</html>

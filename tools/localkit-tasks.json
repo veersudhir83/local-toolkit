@@ -1,0 +1,202 @@
+{
+  "tasks": [
+    {
+      "id": "b52232e9-2830-4db4-85c8-b516576753b1",
+      "title": "Follow up on sending MSR",
+      "project": "Tusker",
+      "notes": "Monthly",
+      "status": "pending",
+      "targetDate": "2026-05-01",
+      "createdAt": "2026-04-20T12:17:57.305Z"
+    },
+    {
+      "id": "bb361f86-91f8-4d56-9db4-44692056420f",
+      "title": "AiDE Usage Tracking",
+      "project": "Tusker",
+      "notes": "Monthly",
+      "status": "pending",
+      "targetDate": "2026-04-30",
+      "createdAt": "2026-04-20T12:17:42.530Z"
+    },
+    {
+      "id": "2ea49873-16d5-43f2-92eb-1f2464c63ba7",
+      "title": "Monthly Status Report - 1st Tuesday every month",
+      "project": "Intersoft",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-05-04",
+      "createdAt": "2026-04-20T12:17:18.235Z"
+    },
+    {
+      "id": "605b91f0-be36-4ca1-baa1-16f7afa1335c",
+      "title": "Invite for Inspire event to Vinay",
+      "project": "Intersoft",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-27",
+      "createdAt": "2026-04-20T12:16:59.250Z"
+    },
+    {
+      "id": "0450f3b5-b0c7-4810-9b54-55c13ae603c1",
+      "title": "Oliver Mc Donnel Sanchez Pade - Leave starting May 26, 2026",
+      "project": "DOHOP",
+      "notes": "Leave starting May 26, 2026, until June 4, 2026",
+      "status": "pending",
+      "targetDate": "2026-05-26",
+      "createdAt": "2026-04-20T12:16:18.493Z"
+    },
+    {
+      "id": "2238628f-30a9-4a6e-9760-e6ec2b815141",
+      "title": "Monthly - send email to invoicing with team efforts for current month",
+      "project": "DOHOP",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-30",
+      "createdAt": "2026-04-20T12:15:43.919Z"
+    },
+    {
+      "id": "abc3193b-c9ba-4119-b551-f2e0ef88f742",
+      "title": "DPA - Data Protection Agreement - need to follow up with Thomas",
+      "project": "DOHOP",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-27",
+      "createdAt": "2026-04-20T12:15:32.800Z"
+    },
+    {
+      "id": "f0b02875-267f-4fe3-bda0-f9db2c3b3612",
+      "title": "Monique Comagon Suarez - check on onboarding to project  as replacement for Janet Sotomayor",
+      "project": "DOHOP",
+      "notes": "(old team member, expected to be back by 23-May)",
+      "status": "pending",
+      "targetDate": "2026-04-23",
+      "createdAt": "2026-04-20T12:15:21.637Z"
+    },
+    {
+      "id": "a9d69ad8-6f54-4366-9b4a-5ef71942f2aa",
+      "title": "Sudheer to get access to Ashima (LMS Tool for DOHOP)",
+      "project": "DOHOP",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-22",
+      "createdAt": "2026-04-20T12:15:03.618Z"
+    },
+    {
+      "id": "50bb77f7-6442-4ba0-90a1-2a3db9176e37",
+      "title": "BE Loans - BlockStream extension - due on 3-May",
+      "project": "BE Loans",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-30",
+      "createdAt": "2026-04-20T12:14:18.570Z"
+    },
+    {
+      "id": "8a431b19-7904-4cee-83b8-d73484dc5a4a",
+      "title": "BE Loans - Weekly Ups & Downs to Leadership",
+      "project": "BE Loans",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-24",
+      "createdAt": "2026-04-20T12:14:07.357Z"
+    },
+    {
+      "id": "4e44f67b-928f-41de-a675-82a8eb825c07",
+      "title": "BE Loans - Demo",
+      "project": "BE Loans",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-23",
+      "createdAt": "2026-04-20T12:13:57.900Z"
+    },
+    {
+      "id": "0b160399-5eae-4758-af52-10282ec73247",
+      "title": "PIP on Shirisha Udatha - to keep or release",
+      "project": "BE Loans",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-21",
+      "createdAt": "2026-04-20T12:13:46.430Z"
+    },
+    {
+      "id": "19698b62-a9e6-459f-8327-0a98fc3d8c9c",
+      "title": "Sathwik LWD 15-May: Delete SH and BE Loans accounts",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-05-15",
+      "createdAt": "2026-04-20T12:12:16.800Z"
+    },
+    {
+      "id": "e38ceeda-719d-4864-9125-d6097c8979a4",
+      "title": "Review & Update Resource Loading and Finance sheet, also send to Luis",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-30",
+      "createdAt": "2026-04-20T12:12:00.149Z"
+    },
+    {
+      "id": "bb7ceae1-515c-448e-9b5a-019ca8c6b619",
+      "title": "SH Global - Delete accounts (Kiranmai Koushika)",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-24",
+      "createdAt": "2026-04-20T12:11:44.498Z"
+    },
+    {
+      "id": "6e585557-d262-4759-8e3e-6c1fcdb2b2cf",
+      "title": "Karthik Kondapally - LWD 24-Apr - Delete SH Global accounts",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-24",
+      "createdAt": "2026-04-20T12:11:30.500Z"
+    },
+    {
+      "id": "3c95d2b1-798f-4c33-acb5-32efa04f2ad8",
+      "title": "Sudhakar Adla - retention ?",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-22",
+      "createdAt": "2026-04-20T12:11:13.943Z"
+    },
+    {
+      "id": "f3168a22-f4f9-487d-ab1e-6a10ea763706",
+      "title": "Srinivasu Kurra - slowness and warn of PIP",
+      "project": "SH Global",
+      "notes": "https://stablehousedigital.slack.com/archives/C0A2K52SEDS/p1776185405636899",
+      "status": "pending",
+      "targetDate": "2026-04-21",
+      "createdAt": "2026-04-20T12:11:02.636Z"
+    },
+    {
+      "id": "28fa63a6-36e0-49bd-8dc5-68b2bb3b962c",
+      "title": "Ganesh - slowness and warn of PIP",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-21",
+      "createdAt": "2026-04-20T12:10:45.120Z"
+    },
+    {
+      "id": "15512162-9205-4585-86c9-a6ddb29dd1f3",
+      "title": "Check with Luis to remove JIRA licenses",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-21",
+      "createdAt": "2026-04-20T12:10:30.180Z"
+    },
+    {
+      "id": "7cf0fd9a-b93a-47aa-a78f-b9a7933d7745",
+      "title": "PIP on Manney Venkata Praveen - to keep or release",
+      "project": "SH Global",
+      "notes": "",
+      "status": "pending",
+      "targetDate": "2026-04-21",
+      "createdAt": "2026-04-20T12:10:16.247Z"
+    }
+  ]
+}

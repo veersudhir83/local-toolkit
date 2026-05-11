@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Swag</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23323233'/><text x='16' y='23' font-size='20' text-anchor='middle' font-family='system-ui,sans-serif'>⚡</text></svg>" />
+  <style>
+    /* ═══════════════════════════════════════════════
+       CSS CUSTOM PROPERTIES — Dark Theme
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg-base:        #1e1e1e;
+      --bg-panel:       #252526;
+      --bg-sidebar:     #1e1e1e;
+      --bg-input:       #3c3c3c;
+      --bg-input-focus: #404040;
+      --bg-hover:       #2a2d2e;
+      --bg-active:      #094771;
+      --bg-modal:       #2d2d2d;
+      --bg-header:      #323233;
+
+      --border:         #3e3e3e;
+      --border-focus:   #007acc;
+
+      --text-primary:   #d4d4d4;
+      --text-secondary: #9d9d9d;
+      --text-muted:     #6b6b6b;
+      --text-link:      #4fc1ff;
+
+      --accent-blue:    #007acc;
+      --accent-green:   #4ec9b0;
+      --accent-orange:  #ce9178;
+      --accent-yellow:  #dcdcaa;
+      --accent-purple:  #c586c0;
+      --accent-red:     #f44747;
+
+      --method-get:     #4ec9b0;
+      --method-post:    #dcdcaa;
+      --method-put:     #ce9178;
+      --method-patch:   #c586c0;
+      --method-delete:  #f44747;
+      --method-options: #9cdcfe;
+      --method-head:    #9d9d9d;
+
+      --status-2xx:     #4ec9b0;
+      --status-3xx:     #dcdcaa;
+      --status-4xx:     #f44747;
+      --status-5xx:     #f44747;
+
+      --sidebar-width:  280px;
+      --header-height:  44px;
+      --radius:         4px;
+      --radius-lg:      6px;
+      --font-mono:      'Consolas', 'Cascadia Code', 'Fira Mono', monospace;
+      --font-ui:        -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --transition:     120ms ease;
+    }
+
+    html[data-theme="light"] {
+      --bg-base:        #f5f5f5;
+      --bg-panel:       #ececec;
+      --bg-sidebar:     #f5f5f5;
+      --bg-input:       #ffffff;
+      --bg-input-focus: #f7f7f7;
+      --bg-hover:       #e8e8e8;
+      --bg-active:      #cce4f7;
+      --bg-modal:       #ffffff;
+      --bg-header:      #e0e0e0;
+
+      --border:         #cccccc;
+      --border-focus:   #0066b8;
+
+      --text-primary:   #1e1e1e;
+      --text-secondary: #555555;
+      --text-muted:     #888888;
+      --text-link:      #0066b8;
+
+      --accent-blue:    #0066b8;
+      --accent-green:   #1a8a76;
+      --accent-orange:  #a0522d;
+      --accent-yellow:  #7a6800;
+      --accent-purple:  #8b008b;
+      --accent-red:     #cc0000;
+
+      --method-get:     #1a8a76;
+      --method-post:    #7a6800;
+      --method-put:     #a0522d;
+      --method-patch:   #8b008b;
+      --method-delete:  #cc0000;
+      --method-options: #0066b8;
+      --method-head:    #555555;
+
+      --status-2xx:     #1a8a76;
+      --status-3xx:     #7a6800;
+      --status-4xx:     #cc0000;
+      --status-5xx:     #cc0000;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════════ */
+    ::-webkit-scrollbar             { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track       { background: transparent; }
+    ::-webkit-scrollbar-thumb       { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       APP HEADER
+    ═══════════════════════════════════════════════ */
+    #app-header {
+      height: var(--header-height);
+      min-height: var(--header-height);
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    #app-header__back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      transition: color var(--transition);
+      padding: 4px 6px;
+      border-radius: var(--radius);
+    }
+
+    #app-header__back:hover {
+      color: var(--text-primary);
+      background: rgba(127,127,127,0.1);
+    }
+
+    #app-header__back-icon { font-size: 16px; }
+
+    #app-header__divider {
+      color: var(--text-muted);
+      font-size: 16px;
+      user-select: none;
+    }
+
+    #app-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #app-logo__icon { font-size: 18px; }
+
+    #app-logo__name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.3px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════════ */
+    #app-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════
+       PANEL (shared base)
+    ═══════════════════════════════════════════════ */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel__title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════════ */
+    #sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .collections-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+
+    .collection {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .collection__header {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px 6px 4px;
+      cursor: pointer;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .collection__header:hover {
+      background: var(--bg-hover);
+    }
+
+    .collection__toggle {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 10px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform var(--transition);
+      border-radius: var(--radius);
+    }
+
+    .collection__toggle:hover { background: var(--bg-input); }
+
+    .collection--open .collection__toggle {
+      transform: rotate(90deg);
+    }
+
+    .collection__name {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .collection__actions {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .collection__header:hover .collection__actions { opacity: 1; }
+
+    .collection__requests {
+      list-style: none;
+      display: none;
+      padding: 0 0 4px 0;
+    }
+
+    .collection--open .collection__requests { display: block; }
+
+    .collection__request-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px 4px 28px;
+      cursor: pointer;
+    }
+
+    .collection__request-item:hover { background: var(--bg-hover); }
+
+    .collection__request-item.is-active { background: var(--bg-active); }
+
+    .request-item__method {
+      font-size: 10px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      min-width: 44px;
+      text-align: center;
+      border-radius: 2px;
+      padding: 1px 3px;
+    }
+
+    .method--get     { color: var(--method-get); }
+    .method--post    { color: var(--method-post); }
+    .method--put     { color: var(--method-put); }
+    .method--patch   { color: var(--method-patch); }
+    .method--delete  { color: var(--method-delete); }
+    .method--options { color: var(--method-options); }
+    .method--head    { color: var(--method-head); }
+
+    .request-item__name {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-delete-request {
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .collection__request-item:hover .btn-delete-request { opacity: 1; }
+
+    .sidebar-footer {
+      padding: 8px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       WORKSPACE
+    ═══════════════════════════════════════════════ */
+    #workspace {
+      flex: 1;
+      overflow: hidden;
+      background: var(--bg-panel);
+    }
+
+    /* ═══════════════════════════════════════════════
+       REQUEST BUILDER
+    ═══════════════════════════════════════════════ */
+    #request-builder {
+      display: flex;
+      flex-direction: column;
+      border-bottom: 2px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #url-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .method-select {
+      background: var(--bg-input);
+      color: var(--accent-green);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition);
+      min-width: 90px;
+    }
+
+    .method-select:focus { border-color: var(--border-focus); }
+
+    .url-input {
+      flex: 1;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .url-input:focus { border-color: var(--border-focus); }
+    .url-input::placeholder { color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       TABS (shared — request & response)
+    ═══════════════════════════════════════════════ */
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .tabs__nav {
+      display: flex;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border);
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+
+    .tabs__tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      padding: 7px 12px;
+      margin-bottom: -1px;
+      transition: color var(--transition), border-color var(--transition);
+      white-space: nowrap;
+      outline: none;
+    }
+
+    .tabs__tab:hover { color: var(--text-primary); }
+
+    .tabs__tab--active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tabs__panel {
+      display: none;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .tabs__panel--active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-badge {
+      display: inline-block;
+      background: var(--accent-blue);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 10px;
+      padding: 0 5px;
+      margin-left: 4px;
+      line-height: 16px;
+      vertical-align: middle;
+    }
+
+    .tab-badge.hidden { display: none; }
+
+    /* ═══════════════════════════════════════════════
+       KEY-VALUE EDITOR
+    ═══════════════════════════════════════════════ */
+    .kv-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 12px 4px;
+    }
+
+    .kv-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .kv-input {
+      flex: 1;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color var(--transition);
+      min-width: 0;
+    }
+
+    .kv-input:focus { border-color: var(--border-focus); }
+    .kv-input::placeholder { color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       BODY TAB
+    ═══════════════════════════════════════════════ */
+    #tab-body { padding: 8px 0; }
+
+    .body-type-selector {
+      display: flex;
+      gap: 16px;
+      padding: 4px 12px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .radio-label:hover { color: var(--text-primary); }
+
+    .radio-label input[type="radio"] {
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .body-text-area {
+      padding: 8px 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-editor {
+      flex: 1;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      line-height: 1.6;
+      transition: border-color var(--transition);
+    }
+
+    .code-editor:focus { border-color: var(--border-focus); }
+    .code-editor::placeholder { color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       SAVE REQUEST BAR
+    ═══════════════════════════════════════════════ */
+    #save-request-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .save-collection-select {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      min-width: 160px;
+      transition: border-color var(--transition);
+    }
+
+    .save-collection-select:focus {
+      border-color: var(--border-focus);
+      color: var(--text-primary);
+    }
+
+    .save-request-name {
+      flex: 1;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+
+    .save-request-name:focus { border-color: var(--border-focus); }
+    .save-request-name::placeholder { color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSE VIEWER
+    ═══════════════════════════════════════════════ */
+    #response-viewer {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .response-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      flex-shrink: 0;
+      background: var(--bg-panel);
+    }
+
+    .response-status {
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .response-status--2xx { color: var(--status-2xx); }
+    .response-status--3xx { color: var(--status-3xx); }
+    .response-status--4xx { color: var(--status-4xx); }
+    .response-status--5xx { color: var(--status-5xx); }
+
+    .response-meta__item { color: var(--text-secondary); }
+
+    .response-placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .response-placeholder strong { color: var(--text-secondary); }
+
+    .response-panel { padding: 0; }
+
+    .response-code {
+      padding: 12px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text-primary);
+      overflow: auto;
+      flex: 1;
+    }
+
+    /* ═══════════════════════════════════════════════
+       JSON TREE
+    ═══════════════════════════════════════════════ */
+    .json-tree {
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.8;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .json-tree .jt-key     { color: #9cdcfe; }
+    .json-tree .jt-string  { color: var(--accent-orange); }
+    .json-tree .jt-number  { color: #b5cea8; }
+    .json-tree .jt-bool    { color: #569cd6; }
+    .json-tree .jt-null    { color: var(--text-muted); }
+    .json-tree .jt-bracket { color: var(--text-secondary); }
+
+    .jt-node { position: relative; }
+
+    .jt-toggle {
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      display: inline-block;
+      width: 14px;
+      text-align: center;
+    }
+
+    .jt-children { margin-left: 20px; }
+    .jt-children.collapsed { display: none; }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSE HEADERS TABLE
+    ═══════════════════════════════════════════════ */
+    .headers-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .headers-table th {
+      text-align: left;
+      padding: 6px 12px;
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+
+    .headers-table td {
+      padding: 5px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      vertical-align: top;
+    }
+
+    .headers-table tr:hover td { background: var(--bg-hover); }
+    .headers-table td:first-child { color: #9cdcfe; width: 35%; }
+
+    /* ═══════════════════════════════════════════════
+       LOADING SPINNER
+    ═══════════════════════════════════════════════ */
+    .response-loading {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════
+       ERROR DISPLAY
+    ═══════════════════════════════════════════════ */
+    .response-error {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--accent-red);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: var(--font-ui);
+      padding: 6px 14px;
+      transition: background var(--transition), color var(--transition), opacity var(--transition);
+      outline: none;
+      white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .btn--primary { background: var(--accent-blue); color: #fff; }
+    .btn--primary:hover { background: #1a8ad4; }
+
+    .btn--secondary {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn--secondary:hover {
+      background: var(--bg-input-focus);
+      border-color: var(--border-focus);
+    }
+
+    .btn--ghost {
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+
+    .btn--ghost:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .btn--icon {
+      padding: 4px 6px;
+      font-size: 13px;
+      background: none;
+      color: var(--text-secondary);
+      border-radius: var(--radius);
+    }
+
+    .btn--icon:hover {
+      background: var(--bg-input);
+      color: var(--text-primary);
+    }
+
+    .btn--sm { padding: 4px 10px; font-size: 11px; }
+    .btn--full { width: 100%; }
+
+    /* ═══════════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════════ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.hidden { display: none; }
+
+    .modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal__box {
+      position: relative;
+      background: var(--bg-modal);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 360px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal__input {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 10px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      transition: border-color var(--transition);
+    }
+
+    .modal__input:focus { border-color: var(--border-focus); }
+
+    .modal__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════════ */
+    .hidden { display: none !important; }
+
+    /* Syntax highlighting spans (Pretty view) */
+    .sh-key    { color: #9cdcfe; }
+    .sh-string { color: var(--accent-orange); }
+    .sh-number { color: #b5cea8; }
+    .sh-bool   { color: #569cd6; }
+    .sh-null   { color: var(--text-muted); }
+    .sh-punct  { color: var(--text-secondary); }
+
+    /* ═══════════════════════════════════════════════
+       ADD-ROW BUTTONS (params / headers / form)
+    ═══════════════════════════════════════════════ */
+    #tab-params, #tab-headers { padding-bottom: 8px; }
+
+    #btn-add-param,
+    #btn-add-header,
+    #btn-add-form-field {
+      margin: 4px 12px 8px;
+      align-self: flex-start;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 700px) {
+      #sidebar { display: none; }
+    }
+
+    @media (max-width: 500px) {
+      #url-bar { flex-wrap: wrap; }
+      .url-input { order: 3; flex-basis: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       APP HEADER
+  ═══════════════════════════════════════════════════════ -->
+  <header id="app-header">
+    <a href="../index.html" id="app-header__back" title="Back to LocalKit">
+      <span id="app-header__back-icon">🧰</span>
+      <span>LocalKit</span>
+    </a>
+    <span id="app-header__divider">/</span>
+    <div id="app-logo">
+      <span id="app-logo__icon">⚡</span>
+      <span id="app-logo__name">Local Swag</span>
+    </div>
+    <div style="flex:1"></div>
+    <button id="btn-theme" title="Toggle light/dark theme" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 6px;border-radius:4px;color:var(--text-secondary);transition:color 120ms ease;" aria-label="Toggle theme">🌙</button>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN LAYOUT: LEFT PANEL + RIGHT PANEL
+  ═══════════════════════════════════════════════════════ -->
+  <main id="app-main">
+
+    <!-- ─────────────────────────────────────────────────────
+         LEFT PANEL — Collections Sidebar
+    ───────────────────────────────────────────────────── -->
+    <aside id="sidebar" class="panel">
+      <div class="panel__header">
+        <span class="panel__title">Collections</span>
+        <button id="btn-new-collection" class="btn btn--icon" title="New Collection">＋</button>
+      </div>
+
+      <!-- Collections list rendered by JS -->
+      <div id="collections-list" class="collections-list">
+        <!-- Each collection block:
+          <div class="collection" data-id="...">
+            <div class="collection__header">
+              <button class="collection__toggle">▶</button>
+              <span class="collection__name">My Collection</span>
+              <div class="collection__actions">
+                <button class="btn btn--icon btn-rename-collection" title="Rename">✏</button>
+                <button class="btn btn--icon btn-export-collection" title="Export">💾</button>
+                <button class="btn btn--icon btn-delete-collection" title="Delete">✕</button>
+              </div>
+            </div>
+            <ul class="collection__requests">
+              <li class="collection__request-item" data-request-id="...">
+                <span class="request-item__method method--get">GET</span>
+                <span class="request-item__name">Get Users</span>
+                <button class="btn btn--icon btn-delete-request" title="Delete">✕</button>
+              </li>
+            </ul>
+          </div>
+        -->
+      </div>
+
+      <!-- Import collection -->
+      <div id="sidebar-footer" class="sidebar-footer">
+        <label id="btn-import-collection" class="btn btn--secondary btn--full" title="Import Collection from JSON">
+          📂 Import Collection
+          <input type="file" id="import-file-input" accept=".json" hidden />
+        </label>
+      </div>
+    </aside>
+
+    <!-- ─────────────────────────────────────────────────────
+         RIGHT PANEL — Request Builder + Response Viewer
+    ───────────────────────────────────────────────────── -->
+    <section id="workspace" class="panel">
+
+      <!-- ···················································
+           REQUEST BUILDER
+      ··················································· -->
+      <div id="request-builder">
+
+        <!-- URL Bar -->
+        <div id="url-bar">
+          <select id="method-select" class="method-select" aria-label="HTTP Method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+            <option value="OPTIONS">OPTIONS</option>
+            <option value="HEAD">HEAD</option>
+          </select>
+          <input
+            type="url"
+            id="url-input"
+            class="url-input"
+            placeholder="https://api.example.com/endpoint"
+            aria-label="Request URL"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="btn-send" class="btn btn--primary">Send</button>
+        </div>
+
+        <!-- Request Tabs: Params | Headers | Body -->
+        <div id="request-tabs" class="tabs">
+          <div class="tabs__nav" role="tablist">
+            <button class="tabs__tab tabs__tab--active" role="tab" data-tab="params" aria-selected="true">
+              Params <span id="params-count" class="tab-badge hidden">0</span>
+            </button>
+            <button class="tabs__tab" role="tab" data-tab="headers" aria-selected="false">
+              Headers <span id="headers-count" class="tab-badge hidden">0</span>
+            </button>
+            <button class="tabs__tab" role="tab" data-tab="body" aria-selected="false">
+              Body <span id="body-indicator" class="tab-badge hidden">●</span>
+            </button>
+          </div>
+
+          <!-- Params Tab -->
+          <div id="tab-params" class="tabs__panel tabs__panel--active" role="tabpanel">
+            <div id="params-editor" class="kv-editor">
+              <!-- Key-value rows rendered by JS -->
+              <!-- Row template:
+                <div class="kv-row" data-index="0">
+                  <input class="kv-input kv-key"   type="text" placeholder="Key"   />
+                  <input class="kv-input kv-value" type="text" placeholder="Value" />
+                  <button class="btn btn--icon btn-remove-kv" title="Remove">✕</button>
+                </div>
+              -->
+            </div>
+            <button id="btn-add-param" class="btn btn--ghost btn--sm">＋ Add Parameter</button>
+          </div>
+
+          <!-- Headers Tab -->
+          <div id="tab-headers" class="tabs__panel" role="tabpanel">
+            <div id="headers-editor" class="kv-editor">
+              <!-- Key-value rows rendered by JS -->
+            </div>
+            <button id="btn-add-header" class="btn btn--ghost btn--sm">＋ Add Header</button>
+          </div>
+
+          <!-- Body Tab -->
+          <div id="tab-body" class="tabs__panel" role="tabpanel">
+            <div id="body-type-selector" class="body-type-selector">
+              <label class="radio-label">
+                <input type="radio" name="body-type" value="none" checked /> None
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="body-type" value="json" /> JSON
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="body-type" value="form" /> Form
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="body-type" value="raw" /> Raw
+              </label>
+            </div>
+
+            <!-- JSON / Raw body textarea -->
+            <div id="body-text-area" class="body-text-area hidden">
+              <textarea
+                id="body-input"
+                class="code-editor"
+                placeholder='{"key": "value"}'
+                spellcheck="false"
+                autocomplete="off"
+              ></textarea>
+            </div>
+
+            <!-- Form body key-value editor -->
+            <div id="body-form-editor" class="kv-editor hidden">
+              <!-- Key-value rows rendered by JS -->
+            </div>
+            <button id="btn-add-form-field" class="btn btn--ghost btn--sm hidden">＋ Add Field</button>
+          </div>
+        </div>
+
+        <!-- Save to Collection -->
+        <div id="save-request-bar">
+          <select id="save-collection-select" class="save-collection-select" aria-label="Select collection to save into">
+            <option value="" disabled selected>— Save to collection —</option>
+          </select>
+          <input
+            type="text"
+            id="save-request-name"
+            class="save-request-name"
+            placeholder="Request name"
+            aria-label="Request name"
+          />
+          <button id="btn-update-request" class="btn btn--primary hidden" title="Overwrite the loaded request">Update</button>
+          <button id="btn-save-request" class="btn btn--secondary">Save as new</button>
+        </div>
+      </div>
+
+      <!-- ···················································
+           RESPONSE VIEWER
+      ··················································· -->
+      <div id="response-viewer">
+
+        <!-- Response meta bar -->
+        <div id="response-meta" class="response-meta hidden">
+          <span id="response-status" class="response-status"></span>
+          <span id="response-time"   class="response-meta__item">⏱ <span id="response-time-val">—</span> ms</span>
+          <span id="response-size"   class="response-meta__item">📦 <span id="response-size-val">—</span></span>
+        </div>
+
+        <!-- Response placeholder (shown before first request) -->
+        <div id="response-placeholder" class="response-placeholder">
+          <p>Hit <strong>Send</strong> to see the response</p>
+        </div>
+
+        <!-- Response Tabs: Pretty | Raw | JSON | Headers -->
+        <div id="response-tabs" class="tabs hidden">
+          <div class="tabs__nav" role="tablist">
+            <button class="tabs__tab tabs__tab--active" role="tab" data-tab="pretty"   aria-selected="true">Pretty</button>
+            <button class="tabs__tab"                   role="tab" data-tab="raw"      aria-selected="false">Raw</button>
+            <button class="tabs__tab"                   role="tab" data-tab="json"     aria-selected="false">JSON</button>
+            <button class="tabs__tab"                   role="tab" data-tab="res-headers" aria-selected="false">Headers</button>
+          </div>
+
+          <!-- Pretty Tab -->
+          <div id="tab-pretty" class="tabs__panel tabs__panel--active response-panel" role="tabpanel">
+            <pre id="response-pretty" class="response-code"></pre>
+          </div>
+
+          <!-- Raw Tab -->
+          <div id="tab-raw" class="tabs__panel response-panel" role="tabpanel">
+            <pre id="response-raw" class="response-code"></pre>
+          </div>
+
+          <!-- JSON Tree Tab -->
+          <div id="tab-json" class="tabs__panel response-panel" role="tabpanel">
+            <div id="response-json-tree" class="json-tree"></div>
+          </div>
+
+          <!-- Response Headers Tab -->
+          <div id="tab-res-headers" class="tabs__panel response-panel" role="tabpanel">
+            <table id="response-headers-table" class="headers-table">
+              <thead>
+                <tr>
+                  <th>Header</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody id="response-headers-body">
+                <!-- Rows rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div id="response-loading" class="response-loading hidden">
+          <div class="spinner"></div>
+          <span>Sending request…</span>
+        </div>
+
+        <!-- Error display -->
+        <div id="response-error" class="response-error hidden">
+          <span id="response-error-msg"></span>
+        </div>
+
+      </div>
+      <!-- /response-viewer -->
+
+    </section>
+    <!-- /workspace -->
+
+  </main>
+  <!-- /app-main -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       MODALS
+  ═══════════════════════════════════════════════════════ -->
+
+  <!-- New Collection Modal -->
+  <div id="modal-new-collection" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-new-collection-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box">
+      <h2 class="modal__title" id="modal-new-collection-title">New Collection</h2>
+      <input
+        type="text"
+        id="new-collection-name"
+        class="modal__input"
+        placeholder="Collection name"
+        aria-label="Collection name"
+      />
+      <div class="modal__actions">
+        <button id="btn-new-collection-confirm" class="btn btn--primary">Create</button>
+        <button id="btn-new-collection-cancel"  class="btn btn--ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Collection Modal -->
+  <div id="modal-rename-collection" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-rename-collection-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box">
+      <h2 class="modal__title" id="modal-rename-collection-title">Rename Collection</h2>
+      <input
+        type="text"
+        id="rename-collection-name"
+        class="modal__input"
+        placeholder="New name"
+        aria-label="New collection name"
+      />
+      <input type="hidden" id="rename-collection-id" />
+      <div class="modal__actions">
+        <button id="btn-rename-collection-confirm" class="btn btn--primary">Rename</button>
+        <button id="btn-rename-collection-cancel"  class="btn btn--ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* ═══════════════════════════════════════════════════════════
+       APP STATE
+    ═══════════════════════════════════════════════════════════ */
+    const appState = {
+      method:   'GET',
+      url:      '',
+      params:   [{ key: '', value: '' }],
+      headers:  [{ key: '', value: '' }],
+      bodyType: 'none',
+      bodyText: '',
+      bodyForm: [{ key: '', value: '' }],
+      response: null,
+      collections: {},
+      activeRequestId:   null,
+      activeCollectionId: null,  // collection the active request belongs to
+      openCollections: new Set(), // tracks which collection IDs are expanded
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — UUID
+    ═══════════════════════════════════════════════════════════ */
+    function uid() {
+      return crypto.randomUUID();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       UTILITY — Generic Tab Switcher
+    ═══════════════════════════════════════════════════════════ */
+    function initTabs(navEl, getPanelId) {
+      navEl.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-tab]');
+        if (!tab) return;
+        const key = tab.dataset.tab;
+
+        navEl.querySelectorAll('.tabs__tab').forEach(t => {
+          t.classList.toggle('tabs__tab--active', t === tab);
+          t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+        });
+
+        const container = navEl.closest('.tabs');
+        container.querySelectorAll('.tabs__panel').forEach(p => {
+          p.classList.toggle('tabs__panel--active', p.id === getPanelId(key));
+        });
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       KEY-VALUE EDITOR
+    ═══════════════════════════════════════════════════════════ */
+    function renderKvEditor(editorEl, rows, onChange) {
+      editorEl.innerHTML = '';
+      rows.forEach((row, i) => {
+        const div = document.createElement('div');
+        div.className = 'kv-row';
+        div.dataset.index = i;
+
+        const keyInput = document.createElement('input');
+        keyInput.type = 'text';
+        keyInput.className = 'kv-input kv-key';
+        keyInput.placeholder = 'Key';
+        keyInput.value = row.key;
+        keyInput.addEventListener('input', () => { rows[i].key = keyInput.value; onChange(); });
+
+        const valInput = document.createElement('input');
+        valInput.type = 'text';
+        valInput.className = 'kv-input kv-value';
+        valInput.placeholder = 'Value';
+        valInput.value = row.value;
+        valInput.addEventListener('input', () => { rows[i].value = valInput.value; onChange(); });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn--icon btn-remove-kv';
+        removeBtn.title = 'Remove';
+        removeBtn.textContent = '✕';
+        removeBtn.addEventListener('click', () => {
+          rows.splice(i, 1);
+          if (rows.length === 0) rows.push({ key: '', value: '' });
+          renderKvEditor(editorEl, rows, onChange);
+          onChange();
+        });
+
+        div.appendChild(keyInput);
+        div.appendChild(valInput);
+        div.appendChild(removeBtn);
+        editorEl.appendChild(div);
+      });
+    }
+
+    function countFilledRows(rows) {
+      return rows.filter(r => r.key.trim() || r.value.trim()).length;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       METHOD COLOR
+    ═══════════════════════════════════════════════════════════ */
+    const METHOD_COLORS = {
+      GET:     'var(--method-get)',
+      POST:    'var(--method-post)',
+      PUT:     'var(--method-put)',
+      PATCH:   'var(--method-patch)',
+      DELETE:  'var(--method-delete)',
+      OPTIONS: 'var(--method-options)',
+      HEAD:    'var(--method-head)',
+    };
+
+    function updateMethodColor() {
+      const sel = document.getElementById('method-select');
+      sel.style.color = METHOD_COLORS[sel.value] || 'var(--text-primary)';
+      appState.method = sel.value;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       BODY TYPE TOGGLE
+    ═══════════════════════════════════════════════════════════ */
+    function updateBodyUI() {
+      const type = appState.bodyType;
+      const showText = type === 'json' || type === 'raw';
+      const showForm = type === 'form';
+
+      document.getElementById('body-text-area').classList.toggle('hidden', !showText);
+      document.getElementById('body-form-editor').classList.toggle('hidden', !showForm);
+      document.getElementById('btn-add-form-field').classList.toggle('hidden', !showForm);
+
+      document.getElementById('body-input').placeholder =
+        type === 'json' ? '{\n  "key": "value"\n}' : 'Request body…';
+
+      const hasBody = (showText && appState.bodyText.trim()) ||
+                      (showForm && countFilledRows(appState.bodyForm) > 0);
+      document.getElementById('body-indicator').classList.toggle('hidden', !hasBody);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       BADGES
+    ═══════════════════════════════════════════════════════════ */
+    function updateParamsBadge() {
+      const count = countFilledRows(appState.params);
+      const badge = document.getElementById('params-count');
+      badge.textContent = count;
+      badge.classList.toggle('hidden', count === 0);
+    }
+
+    function updateHeadersBadge() {
+      const count = countFilledRows(appState.headers);
+      const badge = document.getElementById('headers-count');
+      badge.textContent = count;
+      badge.classList.toggle('hidden', count === 0);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       INIT — REQUEST BUILDER
+    ═══════════════════════════════════════════════════════════ */
+    function initRequestBuilder() {
+      // Method select
+      const methodSel = document.getElementById('method-select');
+      methodSel.addEventListener('change', updateMethodColor);
+      updateMethodColor();
+
+      // URL input
+      const urlInput = document.getElementById('url-input');
+      urlInput.addEventListener('input', () => { appState.url = urlInput.value; });
+
+      // Request tabs
+      initTabs(
+        document.querySelector('#request-tabs .tabs__nav'),
+        key => `tab-${key}`
+      );
+
+      // Params editor
+      const paramsEditor = document.getElementById('params-editor');
+      const onParamsChange = () => updateParamsBadge();
+      renderKvEditor(paramsEditor, appState.params, onParamsChange);
+      document.getElementById('btn-add-param').addEventListener('click', () => {
+        appState.params.push({ key: '', value: '' });
+        renderKvEditor(paramsEditor, appState.params, onParamsChange);
+      });
+
+      // Headers editor
+      const headersEditor = document.getElementById('headers-editor');
+      const onHeadersChange = () => updateHeadersBadge();
+      renderKvEditor(headersEditor, appState.headers, onHeadersChange);
+      document.getElementById('btn-add-header').addEventListener('click', () => {
+        appState.headers.push({ key: '', value: '' });
+        renderKvEditor(headersEditor, appState.headers, onHeadersChange);
+      });
+
+      // Body type radios
+      document.querySelectorAll('input[name="body-type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          appState.bodyType = radio.value;
+          updateBodyUI();
+        });
+      });
+
+      // Body textarea
+      const bodyInput = document.getElementById('body-input');
+      bodyInput.addEventListener('input', () => {
+        appState.bodyText = bodyInput.value;
+        updateBodyUI();
+      });
+
+      // Body form editor
+      const bodyFormEditor = document.getElementById('body-form-editor');
+      const onBodyFormChange = () => updateBodyUI();
+      renderKvEditor(bodyFormEditor, appState.bodyForm, onBodyFormChange);
+      document.getElementById('btn-add-form-field').addEventListener('click', () => {
+        appState.bodyForm.push({ key: '', value: '' });
+        renderKvEditor(bodyFormEditor, appState.bodyForm, onBodyFormChange);
+      });
+
+      // Initial state
+      updateBodyUI();
+      updateParamsBadge();
+      updateHeadersBadge();
+
+      // Send button (wired to sendRequest defined in next task)
+      document.getElementById('btn-send').addEventListener('click', () => {
+        if (typeof sendRequest === 'function') sendRequest();
+      });
+
+      // Enter on URL input → send
+      urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && typeof sendRequest === 'function') sendRequest();
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSE UI HELPERS
+    ═══════════════════════════════════════════════════════════ */
+    function showResponseLoading() {
+      document.getElementById('response-placeholder').classList.add('hidden');
+      document.getElementById('response-tabs').classList.add('hidden');
+      document.getElementById('response-error').classList.add('hidden');
+      document.getElementById('response-meta').classList.add('hidden');
+      document.getElementById('response-loading').classList.remove('hidden');
+    }
+
+    function showResponseError(msg) {
+      document.getElementById('response-loading').classList.add('hidden');
+      document.getElementById('response-placeholder').classList.add('hidden');
+      document.getElementById('response-tabs').classList.add('hidden');
+      document.getElementById('response-meta').classList.add('hidden');
+      document.getElementById('response-error').classList.remove('hidden');
+      document.getElementById('response-error-msg').textContent = msg;
+    }
+
+    function showResponseResult() {
+      document.getElementById('response-loading').classList.add('hidden');
+      document.getElementById('response-placeholder').classList.add('hidden');
+      document.getElementById('response-error').classList.add('hidden');
+      document.getElementById('response-meta').classList.remove('hidden');
+      document.getElementById('response-tabs').classList.remove('hidden');
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FORMAT BYTES
+    ═══════════════════════════════════════════════════════════ */
+    function formatBytes(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SEND REQUEST
+    ═══════════════════════════════════════════════════════════ */
+    async function sendRequest() {
+      const rawUrl = appState.url.trim();
+      if (!rawUrl) {
+        showResponseError('Please enter a URL.');
+        return;
+      }
+
+      // Build URL with query params
+      let finalUrl;
+      try {
+        finalUrl = new URL(rawUrl);
+      } catch {
+        // Try prepending https:// if missing scheme
+        try {
+          finalUrl = new URL('https://' + rawUrl);
+        } catch {
+          showResponseError(`Invalid URL: "${rawUrl}"`);
+          return;
+        }
+      }
+
+      appState.params
+        .filter(p => p.key.trim())
+        .forEach(p => finalUrl.searchParams.append(p.key.trim(), p.value));
+
+      // Assemble headers
+      const fetchHeaders = new Headers();
+      appState.headers
+        .filter(h => h.key.trim())
+        .forEach(h => fetchHeaders.append(h.key.trim(), h.value));
+
+      // Assemble body
+      let fetchBody = undefined;
+      const method = appState.method;
+      const hasBody = !['GET', 'HEAD'].includes(method);
+
+      if (hasBody) {
+        switch (appState.bodyType) {
+          case 'json':
+            fetchBody = appState.bodyText || null;
+            if (fetchBody && !fetchHeaders.has('Content-Type')) {
+              fetchHeaders.append('Content-Type', 'application/json');
+            }
+            break;
+          case 'raw':
+            fetchBody = appState.bodyText || null;
+            break;
+          case 'form': {
+            const fd = new URLSearchParams();
+            appState.bodyForm
+              .filter(f => f.key.trim())
+              .forEach(f => fd.append(f.key.trim(), f.value));
+            fetchBody = fd.toString();
+            if (!fetchHeaders.has('Content-Type')) {
+              fetchHeaders.append('Content-Type', 'application/x-www-form-urlencoded');
+            }
+            break;
+          }
+          default:
+            fetchBody = undefined;
+        }
+      }
+
+      showResponseLoading();
+
+      const t0 = performance.now();
+
+      try {
+        const res = await fetch(finalUrl.toString(), {
+          method,
+          headers: fetchHeaders,
+          body: fetchBody,
+          mode: 'cors',
+          credentials: 'omit',
+        });
+
+        const t1 = performance.now();
+        const elapsed = Math.round(t1 - t0);
+
+        // Read body as text
+        const bodyText = await res.text();
+        const bodyBytes = new TextEncoder().encode(bodyText).length;
+
+        // Collect response headers
+        const resHeaders = [];
+        res.headers.forEach((value, key) => {
+          resHeaders.push({ key, value });
+        });
+
+        // Store in state
+        appState.response = {
+          status:     res.status,
+          statusText: res.statusText,
+          headers:    resHeaders,
+          body:       bodyText,
+          elapsed,
+          size:       bodyBytes,
+        };
+
+        // Update meta bar
+        const statusEl = document.getElementById('response-status');
+        statusEl.textContent = `${res.status} ${res.statusText}`;
+        statusEl.className = 'response-status';
+        if (res.status >= 500)      statusEl.classList.add('response-status--5xx');
+        else if (res.status >= 400) statusEl.classList.add('response-status--4xx');
+        else if (res.status >= 300) statusEl.classList.add('response-status--3xx');
+        else                        statusEl.classList.add('response-status--2xx');
+
+        document.getElementById('response-time-val').textContent = elapsed;
+        document.getElementById('response-size-val').textContent = formatBytes(bodyBytes);
+
+        showResponseResult();
+
+        // Trigger response rendering (defined in next task)
+        if (typeof renderResponse === 'function') renderResponse();
+
+      } catch (err) {
+        const t1 = performance.now();
+        const elapsed = Math.round(t1 - t0);
+        let msg = err.message || String(err);
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          msg = `Network error — request failed.\n\nThis may be a CORS restriction or the server is unreachable.\n\nDetails: ${msg}`;
+        }
+        showResponseError(msg);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SYNTAX HIGHLIGHTER (regex-based, no CDN)
+    ═══════════════════════════════════════════════════════════ */
+    function syntaxHighlight(json) {
+      const escaped = json
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+
+      return escaped.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        (match) => {
+          if (/^"/.test(match)) {
+            return /:$/.test(match)
+              ? `<span class="sh-key">${match}</span>`
+              : `<span class="sh-string">${match}</span>`;
+          }
+          if (/true|false/.test(match)) return `<span class="sh-bool">${match}</span>`;
+          if (/null/.test(match))       return `<span class="sh-null">${match}</span>`;
+          return `<span class="sh-number">${match}</span>`;
+        }
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       JSON TREE BUILDER (recursive, collapsible)
+    ═══════════════════════════════════════════════════════════ */
+    function buildJsonTree(value) {
+      if (value === null) {
+        const s = document.createElement('span');
+        s.className = 'jt-null'; s.textContent = 'null'; return s;
+      }
+      if (typeof value === 'boolean') {
+        const s = document.createElement('span');
+        s.className = 'jt-bool'; s.textContent = String(value); return s;
+      }
+      if (typeof value === 'number') {
+        const s = document.createElement('span');
+        s.className = 'jt-number'; s.textContent = String(value); return s;
+      }
+      if (typeof value === 'string') {
+        const s = document.createElement('span');
+        s.className = 'jt-string'; s.textContent = JSON.stringify(value); return s;
+      }
+
+      const isArray  = Array.isArray(value);
+      const entries  = isArray ? value.map((v, i) => [i, v]) : Object.entries(value);
+      const openB    = isArray ? '[' : '{';
+      const closeB   = isArray ? ']' : '}';
+
+      const node = document.createElement('div');
+      node.className = 'jt-node';
+
+      if (entries.length === 0) {
+        const s = document.createElement('span');
+        s.className = 'jt-bracket';
+        s.textContent = `${openB}${closeB}`;
+        node.appendChild(s); return node;
+      }
+
+      const toggle = document.createElement('span');
+      toggle.className = 'jt-toggle';
+      toggle.textContent = '▼';
+
+      const open = document.createElement('span');
+      open.className = 'jt-bracket';
+      open.textContent = openB;
+
+      const summary = document.createElement('span');
+      summary.className = 'jt-bracket';
+      summary.style.display = 'none';
+      summary.textContent = isArray ? ` … ${entries.length} items ` : ` … ${entries.length} keys `;
+
+      const children = document.createElement('div');
+      children.className = 'jt-children';
+
+      entries.forEach(([key, val], idx) => {
+        const line = document.createElement('div');
+        if (!isArray) {
+          const ks = document.createElement('span');
+          ks.className = 'jt-key';
+          ks.textContent = `"${key}": `;
+          line.appendChild(ks);
+        }
+        line.appendChild(buildJsonTree(val));
+        if (idx < entries.length - 1) {
+          const comma = document.createElement('span');
+          comma.className = 'jt-bracket';
+          comma.textContent = ',';
+          line.appendChild(comma);
+        }
+        children.appendChild(line);
+      });
+
+      const close = document.createElement('span');
+      close.className = 'jt-bracket';
+      close.textContent = closeB;
+
+      toggle.addEventListener('click', () => {
+        const collapsed = children.classList.toggle('collapsed');
+        toggle.textContent = collapsed ? '▶' : '▼';
+        summary.style.display = collapsed ? 'inline' : 'none';
+      });
+
+      node.appendChild(toggle);
+      node.appendChild(open);
+      node.appendChild(summary);
+      node.appendChild(children);
+      node.appendChild(close);
+      return node;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RENDER RESPONSE
+    ═══════════════════════════════════════════════════════════ */
+    function renderResponse() {
+      const res = appState.response;
+      if (!res) return;
+      const body = res.body;
+
+      // Pretty tab
+      const prettyEl = document.getElementById('response-pretty');
+      try {
+        const parsed = JSON.parse(body);
+        prettyEl.innerHTML = syntaxHighlight(JSON.stringify(parsed, null, 2));
+      } catch {
+        prettyEl.textContent = body;
+      }
+
+      // Raw tab
+      document.getElementById('response-raw').textContent = body;
+
+      // JSON tree tab
+      const jsonTreeEl = document.getElementById('response-json-tree');
+      jsonTreeEl.innerHTML = '';
+      try {
+        jsonTreeEl.appendChild(buildJsonTree(JSON.parse(body)));
+      } catch {
+        const msg = document.createElement('span');
+        msg.style.color = 'var(--text-muted)';
+        msg.textContent = 'Response is not valid JSON.';
+        jsonTreeEl.appendChild(msg);
+      }
+
+      // Response Headers tab
+      const tbody = document.getElementById('response-headers-body');
+      tbody.innerHTML = '';
+      res.headers.forEach(({ key, value }) => {
+        const tr  = document.createElement('tr');
+        const tdK = document.createElement('td');
+        tdK.textContent = key;
+        const tdV = document.createElement('td');
+        tdV.textContent = value;
+        tr.appendChild(tdK);
+        tr.appendChild(tdV);
+        tbody.appendChild(tr);
+      });
+
+      // Wire response tabs (idempotent)
+      initTabs(
+        document.querySelector('#response-tabs .tabs__nav'),
+        key => `tab-${key}`
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       COLLECTIONS — localStorage persistence
+    ═══════════════════════════════════════════════════════════ */
+    const LS_KEY = 'localswag_collections';
+
+    function loadCollections() {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        appState.collections = raw ? JSON.parse(raw) : {};
+      } catch {
+        appState.collections = {};
+      }
+    }
+
+    function saveCollections() {
+      localStorage.setItem(LS_KEY, JSON.stringify(appState.collections));
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       COLLECTIONS — Sidebar Render
+    ═══════════════════════════════════════════════════════════ */
+    function renderCollectionsSidebar() {
+      const listEl = document.getElementById('collections-list');
+      listEl.innerHTML = '';
+
+      const ids = Object.keys(appState.collections);
+
+      if (ids.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'padding:16px 12px;color:var(--text-muted);font-size:12px;';
+        empty.textContent = 'No collections yet. Click ＋ to create one.';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      ids.forEach(collId => {
+        const coll = appState.collections[collId];
+
+        // ── Collection wrapper ───────────────────────────────
+        const collEl = document.createElement('div');
+        collEl.className = 'collection';
+        collEl.dataset.id = collId;
+
+        // ── Collection header ────────────────────────────────
+        const headerEl = document.createElement('div');
+        headerEl.className = 'collection__header';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'collection__toggle';
+        toggleBtn.textContent = '▶';
+        toggleBtn.title = 'Expand / Collapse';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'collection__name';
+        nameSpan.textContent = coll.name;
+
+        const actionsEl = document.createElement('div');
+        actionsEl.className = 'collection__actions';
+
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'btn btn--icon btn-rename-collection';
+        renameBtn.title = 'Rename';
+        renameBtn.textContent = '✏';
+        renameBtn.dataset.id = collId;
+
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn--icon btn-export-collection';
+        exportBtn.title = 'Export';
+        exportBtn.textContent = '💾';
+        exportBtn.dataset.id = collId;
+
+        const deleteCollBtn = document.createElement('button');
+        deleteCollBtn.className = 'btn btn--icon btn-delete-collection';
+        deleteCollBtn.title = 'Delete collection';
+        deleteCollBtn.textContent = '✕';
+        deleteCollBtn.dataset.id = collId;
+
+        actionsEl.appendChild(renameBtn);
+        actionsEl.appendChild(exportBtn);
+        actionsEl.appendChild(deleteCollBtn);
+
+        headerEl.appendChild(toggleBtn);
+        headerEl.appendChild(nameSpan);
+        headerEl.appendChild(actionsEl);
+
+        // ── Requests list ────────────────────────────────────
+        const requestsUl = document.createElement('ul');
+        requestsUl.className = 'collection__requests';
+
+        (coll.requests || []).forEach(req => {
+          const li = document.createElement('li');
+          li.className = 'collection__request-item';
+          if (req.id === appState.activeRequestId) li.classList.add('is-active');
+          li.dataset.collId = collId;
+          li.dataset.requestId = req.id;
+
+          const methodSpan = document.createElement('span');
+          methodSpan.className = `request-item__method method--${req.method.toLowerCase()}`;
+          methodSpan.textContent = req.method;
+
+          const nameEl = document.createElement('span');
+          nameEl.className = 'request-item__name';
+          nameEl.textContent = req.name;
+
+          const delReqBtn = document.createElement('button');
+          delReqBtn.className = 'btn btn--icon btn-delete-request';
+          delReqBtn.title = 'Delete request';
+          delReqBtn.textContent = '✕';
+          delReqBtn.dataset.collId = collId;
+          delReqBtn.dataset.requestId = req.id;
+
+          li.appendChild(methodSpan);
+          li.appendChild(nameEl);
+          li.appendChild(delReqBtn);
+          requestsUl.appendChild(li);
+        });
+
+        collEl.appendChild(headerEl);
+        collEl.appendChild(requestsUl);
+        listEl.appendChild(collEl);
+
+        // ── Restore open state ───────────────────────────────
+        if (appState.openCollections.has(collId)) {
+          collEl.classList.add('collection--open');
+        }
+
+        // ── Toggle expand/collapse ───────────────────────────
+        const doToggle = () => {
+          const isOpen = collEl.classList.toggle('collection--open');
+          if (isOpen) {
+            appState.openCollections.add(collId);
+          } else {
+            appState.openCollections.delete(collId);
+          }
+        };
+
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          doToggle();
+        });
+
+        headerEl.addEventListener('click', (e) => {
+          // Only toggle if clicking the header itself, not action buttons
+          if (e.target.closest('.collection__actions')) return;
+          doToggle();
+        });
+      });
+
+      // Update save-to-collection dropdown
+      updateSaveCollectionDropdown();
+    }
+
+    /* Update the save-to-collection <select> */
+    function updateSaveCollectionDropdown() {
+      const sel = document.getElementById('save-collection-select');
+      const prev = sel.value;
+      sel.innerHTML = '<option value="" disabled selected>— Save to collection —</option>';
+      Object.values(appState.collections).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        sel.appendChild(opt);
+      });
+      if (prev && appState.collections[prev]) sel.value = prev;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SAVE / UPDATE REQUEST
+    ═══════════════════════════════════════════════════════════ */
+
+    /** Switch the save bar between 'new' mode and 'update' mode */
+    function setSaveBarMode(mode) {
+      const updateBtn = document.getElementById('btn-update-request');
+      const saveBtn   = document.getElementById('btn-save-request');
+      if (mode === 'update') {
+        updateBtn.classList.remove('hidden');
+        saveBtn.classList.remove('hidden');
+      } else {
+        updateBtn.classList.add('hidden');
+        saveBtn.classList.remove('hidden');
+      }
+    }
+
+    function initSaveRequest() {
+      // ── Save as new ──────────────────────────────────────────
+      document.getElementById('btn-save-request').addEventListener('click', () => {
+        const collId = document.getElementById('save-collection-select').value;
+        const name   = document.getElementById('save-request-name').value.trim();
+
+        if (!collId) {
+          alert('Please select a collection to save into.');
+          return;
+        }
+        if (!name) {
+          alert('Please enter a name for this request.');
+          return;
+        }
+        if (!appState.url.trim()) {
+          alert('Please enter a URL before saving.');
+          return;
+        }
+
+        const coll = appState.collections[collId];
+        if (!coll) return;
+
+        const request = {
+          id:       uid(),
+          name,
+          method:   appState.method,
+          url:      appState.url,
+          headers:  JSON.parse(JSON.stringify(appState.headers)),
+          params:   JSON.parse(JSON.stringify(appState.params)),
+          body:     appState.bodyText,
+          bodyType: appState.bodyType,
+          bodyForm: JSON.parse(JSON.stringify(appState.bodyForm)),
+        };
+
+        coll.requests.push(request);
+        // New request becomes the active one
+        appState.activeRequestId   = request.id;
+        appState.activeCollectionId = collId;
+        saveCollections();
+        renderCollectionsSidebar();
+        setSaveBarMode('update');
+
+        // Clear name field after save
+        document.getElementById('save-request-name').value = request.name;
+      });
+
+      // ── Update existing ──────────────────────────────────────
+      document.getElementById('btn-update-request').addEventListener('click', () => {
+        const reqId  = appState.activeRequestId;
+        const collId = document.getElementById('save-collection-select').value || appState.activeCollectionId;
+        const name   = document.getElementById('save-request-name').value.trim();
+
+        if (!reqId || !collId) {
+          alert('No active request to update.');
+          return;
+        }
+        if (!name) {
+          alert('Please enter a name for this request.');
+          return;
+        }
+        if (!appState.url.trim()) {
+          alert('Please enter a URL before saving.');
+          return;
+        }
+
+        const coll = appState.collections[collId];
+        if (!coll) return;
+
+        const idx = coll.requests.findIndex(r => r.id === reqId);
+        if (idx === -1) {
+          alert('Original request not found. Use "Save as new" instead.');
+          return;
+        }
+
+        // Overwrite in place, keep same id
+        coll.requests[idx] = {
+          id:       reqId,
+          name,
+          method:   appState.method,
+          url:      appState.url,
+          headers:  JSON.parse(JSON.stringify(appState.headers)),
+          params:   JSON.parse(JSON.stringify(appState.params)),
+          body:     appState.bodyText,
+          bodyType: appState.bodyType,
+          bodyForm: JSON.parse(JSON.stringify(appState.bodyForm)),
+        };
+
+        saveCollections();
+        renderCollectionsSidebar();
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       LOAD REQUEST FROM COLLECTION (click on sidebar item)
+    ═══════════════════════════════════════════════════════════ */
+    function initLoadRequest() {
+      document.getElementById('collections-list').addEventListener('click', (e) => {
+        // Load request item click (but not the delete button)
+        const item = e.target.closest('.collection__request-item');
+        if (!item || e.target.closest('.btn-delete-request')) return;
+
+        const collId = item.dataset.collId;
+        const reqId  = item.dataset.requestId;
+        const coll   = appState.collections[collId];
+        if (!coll) return;
+
+        const req = coll.requests.find(r => r.id === reqId);
+        if (!req) return;
+
+        // Populate appState
+        appState.method   = req.method;
+        appState.url      = req.url;
+        appState.params   = JSON.parse(JSON.stringify(req.params   || [{ key:'', value:'' }]));
+        appState.headers  = JSON.parse(JSON.stringify(req.headers  || [{ key:'', value:'' }]));
+        appState.bodyText = req.body     || '';
+        appState.bodyType = req.bodyType || 'none';
+        appState.bodyForm = JSON.parse(JSON.stringify(req.bodyForm || [{ key:'', value:'' }]));
+        appState.activeRequestId   = reqId;
+        appState.activeCollectionId = collId;
+
+        // Update method select
+        const methodSel = document.getElementById('method-select');
+        methodSel.value = req.method;
+        updateMethodColor();
+
+        // Update URL input
+        document.getElementById('url-input').value = req.url;
+
+        // Re-render param/header/form editors
+        renderKvEditor(
+          document.getElementById('params-editor'),
+          appState.params,
+          () => updateParamsBadge()
+        );
+        renderKvEditor(
+          document.getElementById('headers-editor'),
+          appState.headers,
+          () => updateHeadersBadge()
+        );
+        renderKvEditor(
+          document.getElementById('body-form-editor'),
+          appState.bodyForm,
+          () => updateBodyUI()
+        );
+
+        // Update body textarea
+        document.getElementById('body-input').value = appState.bodyText;
+
+        // Update body type radio
+        document.querySelectorAll('input[name="body-type"]').forEach(r => {
+          r.checked = (r.value === appState.bodyType);
+        });
+        updateBodyUI();
+        updateParamsBadge();
+        updateHeadersBadge();
+
+        // Pre-fill save bar with the loaded request's collection + name
+        const saveCollSel = document.getElementById('save-collection-select');
+        saveCollSel.value = collId;
+        document.getElementById('save-request-name').value = req.name;
+
+        // Show Update button
+        setSaveBarMode('update');
+
+        // Update active highlight in sidebar without full re-render
+        document.querySelectorAll('.collection__request-item').forEach(el => {
+          el.classList.toggle('is-active', el.dataset.requestId === reqId);
+        });
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DELETE REQUEST / DELETE COLLECTION
+    ═══════════════════════════════════════════════════════════ */
+    function initDeleteHandlers() {
+      // Delete a single request (event delegation on sidebar)
+      document.getElementById('collections-list').addEventListener('click', (e) => {
+        const delReqBtn = e.target.closest('.btn-delete-request');
+        if (!delReqBtn) return;
+        e.stopPropagation();
+
+        const collId = delReqBtn.dataset.collId;
+        const reqId  = delReqBtn.dataset.requestId;
+        const coll   = appState.collections[collId];
+        if (!coll) return;
+
+        if (!confirm(`Delete this request?`)) return;
+
+        coll.requests = coll.requests.filter(r => r.id !== reqId);
+        if (appState.activeRequestId === reqId) appState.activeRequestId = null;
+        saveCollections();
+        renderCollectionsSidebar();
+      });
+
+      // Delete an entire collection (event delegation on sidebar)
+      document.getElementById('collections-list').addEventListener('click', (e) => {
+        const delCollBtn = e.target.closest('.btn-delete-collection');
+        if (!delCollBtn) return;
+        e.stopPropagation();
+
+        const collId = delCollBtn.dataset.id;
+        const coll   = appState.collections[collId];
+        if (!coll) return;
+
+        if (!confirm(`Delete collection "${coll.name}" and all its requests?`)) return;
+
+        delete appState.collections[collId];
+        saveCollections();
+        renderCollectionsSidebar();
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       EXPORT COLLECTION AS JSON
+    ═══════════════════════════════════════════════════════════ */
+    function initExportCollection() {
+      document.getElementById('collections-list').addEventListener('click', (e) => {
+        const exportBtn = e.target.closest('.btn-export-collection');
+        if (!exportBtn) return;
+        e.stopPropagation();
+
+        const collId = exportBtn.dataset.id;
+        const coll   = appState.collections[collId];
+        if (!coll) return;
+
+        const json = JSON.stringify({ collections: { [collId]: coll } }, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `${coll.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       IMPORT COLLECTION FROM JSON FILE
+    ═══════════════════════════════════════════════════════════ */
+    function initImportCollection() {
+      document.getElementById('import-file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = JSON.parse(evt.target.result);
+            if (!data.collections || typeof data.collections !== 'object') {
+              alert('Invalid collection file — missing "collections" key.');
+              return;
+            }
+            // Merge imported collections (assign new UUIDs to avoid ID collisions)
+            Object.values(data.collections).forEach(coll => {
+              const newId = uid();
+              appState.collections[newId] = {
+                id:        newId,
+                name:      coll.name || 'Imported Collection',
+                createdAt: coll.createdAt || new Date().toISOString(),
+                requests:  (coll.requests || []).map(r => ({ ...r, id: uid() })),
+              };
+            });
+            saveCollections();
+            renderCollectionsSidebar();
+          } catch {
+            alert('Could not parse the JSON file. Make sure it is a valid Local Swag export.');
+          }
+        };
+        reader.readAsText(file);
+        // Reset input so same file can be re-imported
+        e.target.value = '';
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CREATE NEW COLLECTION (modal)
+    ═══════════════════════════════════════════════════════════ */
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function initCreateCollection() {
+      const modal     = document.getElementById('modal-new-collection');
+      const nameInput = document.getElementById('new-collection-name');
+
+      // Open modal
+      document.getElementById('btn-new-collection').addEventListener('click', () => {
+        nameInput.value = '';
+        openModal('modal-new-collection');
+        setTimeout(() => nameInput.focus(), 50);
+      });
+
+      // Close on backdrop click
+      modal.querySelector('.modal__backdrop').addEventListener('click', () => {
+        closeModal('modal-new-collection');
+      });
+
+      // Cancel
+      document.getElementById('btn-new-collection-cancel').addEventListener('click', () => {
+        closeModal('modal-new-collection');
+      });
+
+      // Confirm create
+      const doCreate = () => {
+        const name = nameInput.value.trim();
+        if (!name) { nameInput.focus(); return; }
+
+        const id = uid();
+        appState.collections[id] = {
+          id,
+          name,
+          createdAt: new Date().toISOString(),
+          requests:  [],
+        };
+        saveCollections();
+        renderCollectionsSidebar();
+        closeModal('modal-new-collection');
+      };
+
+      document.getElementById('btn-new-collection-confirm').addEventListener('click', doCreate);
+      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doCreate(); });
+
+      // Close on Escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal('modal-new-collection');
+          closeModal('modal-rename-collection');
+        }
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RENAME COLLECTION (modal)
+    ═══════════════════════════════════════════════════════════ */
+    function initRenameCollection() {
+      const modal     = document.getElementById('modal-rename-collection');
+      const nameInput = document.getElementById('rename-collection-name');
+      const idInput   = document.getElementById('rename-collection-id');
+
+      // Open modal from sidebar rename button (event delegation)
+      document.getElementById('collections-list').addEventListener('click', (e) => {
+        const renameBtn = e.target.closest('.btn-rename-collection');
+        if (!renameBtn) return;
+        e.stopPropagation();
+
+        const collId = renameBtn.dataset.id;
+        const coll   = appState.collections[collId];
+        if (!coll) return;
+
+        idInput.value   = collId;
+        nameInput.value = coll.name;
+        openModal('modal-rename-collection');
+        setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
+      });
+
+      // Close on backdrop click
+      modal.querySelector('.modal__backdrop').addEventListener('click', () => {
+        closeModal('modal-rename-collection');
+      });
+
+      // Cancel
+      document.getElementById('btn-rename-collection-cancel').addEventListener('click', () => {
+        closeModal('modal-rename-collection');
+      });
+
+      // Confirm rename
+      const doRename = () => {
+        const name   = nameInput.value.trim();
+        const collId = idInput.value;
+        if (!name || !collId) return;
+
+        const coll = appState.collections[collId];
+        if (!coll) return;
+
+        coll.name = name;
+        saveCollections();
+        renderCollectionsSidebar();
+        closeModal('modal-rename-collection');
+      };
+
+      document.getElementById('btn-rename-collection-confirm').addEventListener('click', doRename);
+      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doRename(); });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       BOOT
+    ═══════════════════════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCollections();
+      initRequestBuilder();
+      initSaveRequest();
+      initLoadRequest();
+      initDeleteHandlers();
+      initExportCollection();
+      initImportCollection();
+      initCreateCollection();
+      initRenameCollection();
+      renderCollectionsSidebar();
+    });
+  </script>
+
+  <script>
+    (function () {
+      var THEME_KEY = 'localkit_theme';
+      var btn = document.getElementById('btn-theme');
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        btn.textContent = theme === 'light' ? '🌙' : '☀️';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+
+      var saved = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(saved);
+
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        localStorage.setItem(THEME_KEY, next);
+        applyTheme(next);
+      });
+    })();
+  </script>
+</body>
+</html>
