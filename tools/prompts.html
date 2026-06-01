@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AI Prompt Library — Sudheer Veeravalli</title>
+<meta name="description" content="A curated, searchable collection of 100+ AI prompts for career growth, automation, communication, and productivity.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
+a{color:#18d26e;text-decoration:none}
+a:hover{color:#35e888}
+.top-bar{background:rgba(0,0,0,0.95);border-bottom:1px solid rgba(24,210,110,0.15);padding:16px 24px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.top-bar h1{font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;color:#fff}
+.top-bar h1 span{color:#18d26e}
+.back-link{font-size:14px;color:rgba(255,255,255,0.6);transition:0.3s}
+.back-link:hover{color:#18d26e}
+.search-wrap{width:100%;max-width:500px;position:relative}
+.search-wrap input{width:100%;padding:12px 16px 12px 42px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:15px;outline:none;transition:0.3s}
+.search-wrap input:focus{border-color:#18d26e;background:rgba(24,210,110,0.05);box-shadow:0 0 20px rgba(24,210,110,0.1)}
+.search-wrap input::placeholder{color:rgba(255,255,255,0.3)}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:rgba(255,255,255,0.3)}
+.stats{font-size:13px;color:rgba(255,255,255,0.4);padding:4px 0}
+.container{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.cat-btn{padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;transition:0.3s;font-family:'Inter',sans-serif}
+.cat-btn:hover{border-color:rgba(24,210,110,0.4);color:#fff;background:rgba(24,210,110,0.08)}
+.cat-btn.active{background:rgba(24,210,110,0.15);border-color:#18d26e;color:#18d26e;font-weight:600}
+.cat-count{background:rgba(255,255,255,0.1);padding:2px 7px;border-radius:10px;font-size:11px;margin-left:6px}
+.cat-btn.active .cat-count{background:rgba(24,210,110,0.2)}
+.section-hdr{font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;color:#fff;margin:32px 0 16px;padding-bottom:10px;border-bottom:2px solid rgba(24,210,110,0.2);display:flex;align-items:center;gap:10px}
+.section-hdr .emoji{font-size:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:20px}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;transition:all 0.3s;cursor:pointer;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#18d26e,#0ea5e9);opacity:0;transition:0.3s}
+.card:hover{border-color:rgba(24,210,110,0.3);background:rgba(24,210,110,0.03);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.card:hover::before{opacity:1}
+.card-num{font-size:11px;font-weight:700;color:#18d26e;background:rgba(24,210,110,0.1);padding:2px 8px;border-radius:6px;display:inline-block;margin-bottom:8px}
+.card h3{font-size:15px;font-weight:600;color:#fff;margin-bottom:10px;line-height:1.4}
+.card-prompt{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;max-height:80px;overflow:hidden;transition:0.3s}
+.card.expanded .card-prompt{max-height:2000px}
+.card-tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);margin-top:10px}
+.card-actions{display:flex;gap:8px;margin-top:12px;opacity:0;transition:0.3s}
+.card:hover .card-actions{opacity:1}
+.copy-btn{padding:6px 14px;border-radius:8px;border:1px solid rgba(24,210,110,0.3);background:rgba(24,210,110,0.08);color:#18d26e;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.2s}
+.copy-btn:hover{background:#18d26e;color:#000}
+.copy-btn.copied{background:#18d26e;color:#000}
+.no-results{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3);font-size:16px}
+mark{background:rgba(24,210,110,0.25);color:#fff;padding:1px 2px;border-radius:2px}
+.scroll-top{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:#18d26e;color:#000;border:none;cursor:pointer;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(24,210,110,0.3);transition:0.3s;z-index:50}
+.scroll-top:hover{transform:scale(1.1)}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.top-bar h1{font-size:16px}.section-hdr{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<div><a href="../index.html" class="back-link">← Back to LocalKit</a>
+<h1>🧠 AI <span>Prompt</span> Library</h1></div>
+<div class="search-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+<input type="text" id="searchInput" placeholder="Search prompts... (e.g. resume, automation, interview)">
+</div>
+<div class="stats" id="stats"></div>
+</div>
+<div class="container">
+<div class="cats" id="cats"></div>
+<div id="content"></div>
+<div class="no-results" id="noResults" style="display:none">No prompts match your search. Try different keywords.</div>
+</div>
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const DATA=[
+{cat:"Career Direction",icon:"🎯",items:[
+{t:"Career Path Finder",p:"Act as a senior career strategist. I am a Program Manager with 20+ years in DevOps, Cloud, DeFi, and Healthcare. Education: [your education]. Skills: [your skills]. Map 5 high-growth career paths for the next 5 years. For each path, include: target title, realistic salary range in India and US, top 3 skills to acquire, certifications needed, and a 90-day kickstart plan."},
+{t:"Skill Gap Analysis",p:"I want to transition into [target role] (e.g., VP Engineering, CTO, Head of Platform). My current skills: Program Management, DevOps, CI/CD, AWS, Agile, Blockchain, HIPAA systems. Compare these against the top 10 requirements from real job postings for [target role]. Rank my gaps by impact and create a 6-month closing plan with specific courses, projects, and milestones."},
+{t:"Career Roadmap Builder",p:"Create a detailed, month-by-month roadmap to become [target role] from my current position as Program Manager. Include: technical skills to add, leadership competencies, certifications, portfolio projects, networking targets, and interview prep timeline. Format as a Gantt-style table."},
+{t:"Future-Proof Skills Radar",p:"For the [industry] sector, identify the 10 most valuable skills for 2026-2030. For each skill: explain the demand driver, estimate time-to-competency, list the best learning resource, and rate the income uplift potential (1-5). Focus on skills relevant to someone in technical program management."},
+{t:"Strategic Skill Stacking",p:"I have deep expertise in DevOps, Cloud Architecture, and Program Management. Suggest 5 unique skill combinations (e.g., DevOps + AI/ML Ops, Program Mgmt + Product Strategy) that would place me in the top 5% of earners. For each combo, explain the market opportunity and how to position myself."},
+{t:"Role Mapping & Trajectory",p:"Based on my current role as Program Manager managing DevOps and Cloud teams, map 3 distinct career trajectories: (1) deep technical leadership, (2) executive management, (3) consulting/advisory. For each, list the next 3 roles, salary progression, and the single most important move to make this quarter."},
+{t:"Career Pivot Playbook",p:"I want to pivot from [current domain] to [target domain]. I bring 20+ years in IT with strengths in team leadership, DevOps, and delivery management. Create a 120-day pivot plan: transferable skills to highlight, gaps to close, 3 quick-win certifications, networking script for cold outreach, and a revised positioning statement."},
+{t:"5-Year Strategic Plan",p:"Build a detailed 5-year career growth plan for a Program Manager in the technology sector. Include: Year 1 — skill investments, Year 2 — visibility projects, Year 3 — leadership expansion, Year 4 — industry positioning, Year 5 — target role. Add salary milestones, key relationships to build, and annual review checkpoints."},
+{t:"Promotion Blueprint",p:"I want to be promoted from Program Manager to [Director/VP] at my current company within 12 months. Draft a 90-day action plan with: (1) quick wins to demonstrate impact, (2) visibility strategies, (3) stakeholder alignment tactics, (4) metrics to track, and (5) a script for initiating the promotion conversation with my manager."},
+{t:"Executive Transition Plan",p:"I am a senior Program Manager preparing to move into an executive role (VP/Director). Create a comprehensive transition plan covering: executive communication style shifts, strategic thinking frameworks, board-level presentation skills, P&L understanding, and building an executive network. Include weekly action items for 90 days."}
+]},
+{cat:"Learning & Upskilling",icon:"📚",items:[
+{t:"80/20 Skill Accelerator",p:"I need to learn [skill] fast. Identify the critical 20% of concepts that deliver 80% of practical value. For each concept: explain it in 2 sentences, give a real-world use case, and suggest one hands-on exercise. Skip theory — focus on what I can apply at work this week."},
+{t:"30-Day Mastery Sprint",p:"Design an intensive 30-day learning plan for [skill]. Structure it as: Week 1 — foundations and setup, Week 2 — core concepts with daily practice, Week 3 — real project implementation, Week 4 — advanced topics and portfolio piece. Include daily time estimates (max 1 hour/day) and free resources only."},
+{t:"Beginner to Expert Path",p:"Teach me [topic] in a structured progression from absolute beginner to advanced practitioner. Break it into 5 levels. For each level: list key concepts, provide a hands-on exercise, recommend one resource, and define the checkpoint to know I am ready for the next level. Include real-world examples from DevOps/Cloud domains."},
+{t:"Portfolio Project Generator",p:"Suggest 8 real-world projects for [skill] that would impress hiring managers and clients. Arrange from beginner to advanced. For each: describe the project scope, list technologies used, estimate completion time, explain what it demonstrates, and provide a GitHub repo structure template."},
+{t:"Practice Problem Set",p:"Generate 15 progressively challenging practice problems for [skill/technology]. Group them into 3 tiers: Fundamentals (5), Applied (5), and Expert (5). For each problem: state the challenge, provide hints, and include a detailed solution with explanation. Tailor examples to enterprise/DevOps contexts where possible."},
+{t:"7-Day Intensive Sprint",p:"Create a focused 7-day sprint plan to gain working proficiency in [skill]. Day 1: Setup and overview. Days 2-3: Core mechanics with exercises. Days 4-5: Build a mini-project. Day 6: Edge cases and troubleshooting. Day 7: Review, refine, and document learnings. Include specific tasks, time blocks, and success criteria for each day."},
+{t:"12-Week Deep Dive Roadmap",p:"Design a 12-week structured learning plan to achieve professional-level mastery in [skill/technology]. Include: weekly learning objectives, recommended resources (mix of free and paid), hands-on labs, milestone projects at weeks 4, 8, and 12, community forums to join, and a self-assessment rubric to track progress."},
+{t:"Micro-Learning Calendar",p:"Create a 30-day micro-learning calendar for [skill] with exactly 20 minutes of daily tasks. Format as a table with columns: Day, Topic, Activity Type (read/watch/practice/build), Specific Task, and Completion Checkbox. Ensure progressive difficulty and include 4 mini-assessments on days 7, 14, 21, and 30."},
+{t:"Certification Strategy",p:"I am a Program Manager in DevOps and Cloud. List the top 10 industry certifications that would maximize my career value in 2026. For each: name the cert, issuing body, estimated prep time, cost, difficulty (1-5), career impact score (1-5), and the best preparation resource. Rank them by ROI for my profile."},
+{t:"Knowledge Extraction Engine",p:"Here is a long video transcript / article / document: [paste text]. Extract and organize: (1) Top 5 key insights, (2) Action items I can implement, (3) Concepts that connect to my work in program management, (4) Questions worth exploring further, (5) A 1-paragraph summary I can share with my team."}
+]},
+{cat:"Job Preparation",icon:"💼",items:[
+{t:"Resume Upgrade",p:"Act as a hiring manager for a Fortune 500 company. Review my resume for [role]: [paste]. Rewrite it to be ATS-optimized with: strong action verbs, quantified achievements (use metrics like %, $, team size), clean formatting, and keywords matching this job description: [paste JD]. Return the improved resume plus a list of changes made."},
+{t:"ATS Keyword Optimizer",p:"Here is a job description: [paste JD]. Here is my current resume: [paste]. Extract the top 20 ATS keywords from the JD. Highlight which ones are missing from my resume. Rewrite my experience bullets to naturally incorporate the missing keywords without sounding forced."},
+{t:"Portfolio Strategy",p:"I am a Program Manager with expertise in DevOps, Cloud, and Blockchain. What portfolio pieces should I create to stand out? Suggest 6 projects across: (1) technical demos, (2) case studies, (3) thought leadership articles. For each, provide a title, outline, target audience, and estimated creation time."},
+{t:"Job Market Intelligence",p:"Analyze the current job market for [role] in [location/remote]. Include: top 10 companies hiring, salary ranges by experience level, most requested skills (ranked), emerging trends, and the 3 best job boards for this role. Focus on data from 2025-2026."},
+{t:"LinkedIn Profile Overhaul",p:"Rewrite my LinkedIn profile to attract recruiters in [industry]. Current headline: [paste]. Current summary: [paste]. Provide: (1) a headline using the formula Role + Expertise + Impact, (2) an engaging About section with a hook, story, and CTA, (3) 5 featured section ideas, (4) a weekly content posting strategy for 30 days."},
+{t:"Achievement Bullet Writer",p:"Transform these raw work experiences into powerful resume bullets: [paste details]. For each bullet: start with a strong action verb, include a measurable outcome, and add business context. Use the CAR format (Challenge, Action, Result). Write 3 variations per experience — concise, detailed, and executive-level."},
+{t:"Job Application Tracker",p:"Create a comprehensive job application tracking system I can use in Google Sheets. Include columns for: Company, Role, Date Applied, Source, Contact Person, Status, Follow-up Date, Interview Dates, Notes, and Offer Details. Add conditional formatting rules and follow-up reminder logic."},
+{t:"Cover Letter Generator",p:"Write a compelling cover letter for [role] at [company]. My background: [paste brief summary]. The job requires: [paste key requirements]. Structure it as: (1) attention-grabbing opening referencing the company, (2) 2 paragraphs mapping my experience to their needs with specific examples, (3) confident closing with clear CTA. Keep it under 300 words."}
+]},
+{cat:"Interview Preparation",icon:"🎤",items:[
+{t:"Mock Interview Simulator",p:"Act as a senior hiring manager interviewing me for [role] at [company type]. Ask me one question at a time from these categories: behavioral (3), situational (3), technical (3), leadership (3). After each of my responses, score it 1-10 and provide specific feedback on content, structure, and delivery. Use the STAR method as your evaluation framework."},
+{t:"Behavioral Answer Builder",p:"Generate the top 15 behavioral interview questions for a [role] position. For each question, write a strong STAR-method answer template using achievements from program management, DevOps leadership, and cross-functional team coordination. Include variations for different experience levels."},
+{t:"Technical Deep Dive Prep",p:"I am interviewing for a [role] that requires knowledge of [skill/technology]. Create 20 interview questions across 4 difficulty levels: Basic (5), Intermediate (5), Advanced (5), and System Design (5). For each question, provide: the ideal answer, common mistakes, and follow-up questions the interviewer might ask."},
+{t:"Salary Negotiation Mastery",p:"I received a job offer for [role] at [company] with base salary [amount]. I believe I should earn [target]. Create a complete negotiation strategy: (1) research-backed talking points, (2) a word-for-word script for the call, (3) responses to 5 common pushback phrases, (4) non-salary items to negotiate, (5) walk-away criteria."},
+{t:"Interview Mistake Analyzer",p:"List the top 15 mistakes candidates make in [role] interviews, organized by stage: (1) Before (preparation errors), (2) During (delivery mistakes), (3) After (follow-up blunders). For each mistake, explain why it hurts, give a real example, and provide the correct approach. Add a pre-interview checklist."},
+{t:"Confidence & Presence Coach",p:"Act as an executive presence coach preparing me for a high-stakes interview. Guide me through: (1) pre-interview mindset routine, (2) power poses and breathing techniques, (3) voice modulation exercises, (4) techniques to handle unexpected questions gracefully, (5) strategies for turning weaknesses into strengths. End with a 30-minute pre-interview ritual I can follow."},
+{t:"Company Research Framework",p:"I am interviewing at [company]. Create a comprehensive research brief covering: (1) company mission, recent news, and financial health, (2) key leaders and their backgrounds, (3) company culture signals from Glassdoor/LinkedIn, (4) likely challenges they face that I can solve, (5) tailored questions I should ask that demonstrate strategic thinking."},
+{t:"Panel Interview Strategy",p:"I have a panel interview with [roles of panelists, e.g., VP Engineering, HR Director, Team Lead]. Create a strategy for: how to address each panelist's concerns, body language tips for engaging multiple people, how to balance technical depth with business impact, and 3 stories that would resonate with this specific panel composition."}
+]},
+{cat:"Salary & Negotiation",icon:"💵",items:[
+{t:"Market Salary Intelligence",p:"Research and present salary benchmarks for [role] across: India (Tier-1 cities), US (remote), and EU. Break down by: experience level (10yr, 15yr, 20yr+), company size (startup, mid, enterprise), and include total compensation (base + bonus + equity). List your data sources and note any trends."},
+{t:"Offer Negotiation Playbook",p:"I received an offer for [position] at [company]: Base: [amount], Bonus: [amount], Other: [details]. My target is [target total comp]. Create a complete negotiation playbook: (1) market data justification, (2) word-for-word email/call scripts, (3) counter-offer strategy with 3 tiers (ideal, acceptable, minimum), (4) non-monetary items to negotiate, (5) timeline and follow-up plan."},
+{t:"Raise Request Builder",p:"Draft a compelling email to my manager requesting a salary review. Include: (1) opening that references our working relationship positively, (2) 5 bullet points of quantified achievements from the past year, (3) market data comparison, (4) specific ask with rationale, (5) flexible closing. Also draft a follow-up email if I do not hear back in a week."},
+{t:"Freelance Launch Plan",p:"I want to start freelancing in [skill] alongside my full-time job. Create a 90-day launch plan: (1) niche positioning and pricing strategy (hourly vs project), (2) platform profiles to create (Upwork, Toptal, LinkedIn), (3) portfolio pieces to showcase, (4) first-client acquisition script, (5) time management system to avoid burnout, (6) legal/tax considerations for India."},
+{t:"Income Diversification Map",p:"I am a Program Manager with skills in DevOps, Cloud, Agile, and Blockchain. Map 10 income streams I can build: (1) consulting, (2) training/workshops, (3) content creation, (4) SaaS products, (5) technical writing. For each: estimate monthly revenue potential, time investment, startup cost, and a 30-day action plan to launch."},
+{t:"Compensation Package Analyzer",p:"Help me evaluate this job offer holistically. Offer details: [paste]. Compare it against my current package: [paste]. Create a side-by-side analysis covering: base salary, bonuses, equity/RSUs, benefits, PTO, remote flexibility, growth potential, commute cost, and work-life balance. Calculate the true total value of each and give a recommendation."}
+]},
+{cat:"Leadership & Growth",icon:"🚀",items:[
+{t:"First 90 Days as Leader",p:"I am starting as a [Team Lead / Engineering Manager / Director] at [company]. Create a detailed 90-day plan: Days 1-30 — listen, learn, build relationships (include specific questions to ask). Days 31-60 — identify quick wins and align on goals. Days 61-90 — execute changes and establish my leadership brand. Include a weekly checklist."},
+{t:"Conflict Resolution Playbook",p:"Two team members have a conflict about [describe situation]. Act as an executive coach and walk me through: (1) individual conversation scripts for each person, (2) a mediation meeting agenda, (3) ground rules to set, (4) resolution frameworks to apply, (5) follow-up actions to prevent recurrence. Keep the tone empathetic but firm."},
+{t:"Mentorship Strategy",p:"I want to find a mentor in [field] who is 2-3 levels above me. Create a complete mentorship strategy: (1) ideal mentor profile, (2) where to find them (events, LinkedIn, communities), (3) a personalized outreach message template, (4) how to structure the first meeting, (5) a value-exchange framework so I am not just taking, (6) a 6-month mentorship roadmap."},
+{t:"Executive Presence Builder",p:"I want to develop stronger executive presence in meetings and presentations. Create a 30-day daily practice plan covering: Week 1 — voice and body language, Week 2 — strategic communication and framing, Week 3 — handling pushback and difficult questions, Week 4 — commanding a room and storytelling. Include specific exercises for each day."},
+{t:"High-Impact Delegation",p:"I manage [X] direct reports across [describe teams]. I currently spend too much time on [list tasks]. Create a delegation framework: (1) categorize my tasks using the Eisenhower matrix, (2) identify what to delegate, automate, or eliminate, (3) create delegation briefs for the top 5 tasks, (4) design a check-in cadence that ensures quality without micromanaging."},
+{t:"Team Performance Optimizer",p:"My team's velocity has dropped by [X%] over the past quarter. Help me diagnose and fix this: (1) list 10 common root causes for team performance decline, (2) create a diagnostic survey I can use, (3) provide intervention strategies for each root cause, (4) design a 4-week performance recovery sprint plan, (5) define metrics to track improvement."},
+{t:"Strategic Thinking Framework",p:"Teach me 5 strategic thinking frameworks used by top executives (e.g., First Principles, MECE, Second-Order Thinking). For each: explain the framework, provide a real-world business scenario, walk through how to apply it step by step, and give me a practice exercise relevant to program management."},
+{t:"Personal Board of Advisors",p:"Help me assemble a 'Personal Board of Advisors' for my career. I need: (1) the 5 archetypes I should recruit (e.g., industry expert, connector, challenger), (2) where to find each type, (3) an outreach script for each, (4) how to structure quarterly advisory conversations, (5) how to maintain these relationships long-term without being transactional."}
+]},
+{cat:"Networking & Branding",icon:"🤝",items:[
+{t:"LinkedIn Profile Transformation",p:"Rewrite my LinkedIn profile to position me as a thought leader in [field]. Current headline: [paste]. Provide: (1) a headline that combines role + niche expertise + measurable impact, (2) a 3-paragraph About section with a compelling hook, career narrative, and clear CTA, (3) experience section rewrites with quantified achievements, (4) 10 skill endorsements to prioritize, (5) a custom URL suggestion."},
+{t:"30-Second Elevator Pitch",p:"Craft 3 versions of my elevator pitch for different contexts: (1) networking event — casual and intriguing, (2) job interview — professional with impact focus, (3) conference speaker intro — authoritative and visionary. My background: Program Manager, 20+ years, DevOps/Cloud/Blockchain expertise. Each pitch should be exactly 30 seconds when spoken aloud."},
+{t:"Informational Interview Script",p:"I want to connect with a [VP/Director/CTO] at [target company] for an informational interview. Create: (1) a LinkedIn connection request (under 300 characters), (2) a follow-up message after they accept, (3) an email requesting 20 minutes of their time, (4) a list of 10 strategic questions to ask during the call, (5) a thank-you message template with a value-add."},
+{t:"4-Week Thought Leadership Plan",p:"Create a 4-week LinkedIn content calendar to establish me as an expert in [topic]. Each week should have: 2 text posts (with hook + insight + CTA), 1 carousel idea, and 1 engagement activity (comments/shares). Include posting times optimized for India timezone, hashtag strategy, and a content repurposing plan to use the same ideas on Twitter and blogs."},
+{t:"Quarterly Review Powerhouse",p:"Here are my work notes from this quarter: [paste]. Transform these into: (1) a 5-bullet executive summary of achievements with metrics, (2) a self-assessment aligned to my company's rating categories, (3) impact statements connecting my work to business outcomes, (4) growth areas framed positively, (5) talking points for my review meeting with specific examples."},
+{t:"OKR & Goal Architect",p:"Transform these annual objectives: [paste] into SMART goals with OKRs. For each goal, create: (1) Objective statement, (2) 3 measurable Key Results with specific numbers, (3) quarterly milestones, (4) leading indicators to track weekly, (5) dependencies and risks. Ensure goals ladder up to both team and organizational priorities."},
+{t:"Professional Network Audit",p:"Help me audit and strengthen my professional network. Guide me through: (1) mapping my current network into tiers (inner circle, mid-ring, outer ring), (2) identifying gaps by role type, industry, and geography, (3) creating a monthly networking cadence, (4) drafting re-engagement messages for dormant contacts, (5) setting up a CRM system to track relationships."}
+]},
+{cat:"Communication Skills",icon:"🗣️",items:[
+{t:"Speech Structure Builder",p:"Help me structure a [2/5/10]-minute speech on [topic] for [audience]. Create: (1) an attention-grabbing opening (choose from question, statistic, or story), (2) 3 key points with supporting evidence, (3) smooth transitions between points, (4) a memorable closing with a clear call-to-action. Also provide delivery tips for pace, pauses, and emphasis."},
+{t:"Tone Calibrator",p:"Rewrite this message in 4 different tones for different audiences: (1) Formal — for C-suite executives, (2) Professional-friendly — for cross-team collaboration, (3) Persuasive — for getting buy-in on a proposal, (4) Empathetic — for delivering difficult news. Message: [paste]. For each version, explain why specific word choices work for that audience."},
+{t:"Email Mastercraft",p:"Rewrite this email for maximum impact: [paste]. Apply these principles: (1) subject line that gets opened, (2) first sentence that states the purpose, (3) body organized with bullet points for scanability, (4) clear ask or next step, (5) appropriate sign-off for the relationship. Also flag any phrases that could be misread as passive-aggressive or unclear."},
+{t:"Meeting Confidence Toolkit",p:"I want to speak up more effectively in meetings. Provide: (1) 10 sentence starters for sharing opinions diplomatically, (2) 5 phrases for respectfully disagreeing, (3) 5 ways to build on others' ideas, (4) techniques for interrupting politely in fast-paced discussions, (5) how to recover when I lose my train of thought, (6) a pre-meeting preparation checklist."},
+{t:"Active Listening Mastery",p:"Design a 2-week active listening improvement program. Week 1: Teach me 5 core techniques (reflective listening, paraphrasing, open questions, summarizing, validating). Week 2: Give me daily real-world scenarios to practice each technique. Include: sample dialogues showing good vs bad listening, self-assessment questions after each practice, and body language tips."},
+{t:"Presentation Architect",p:"Help me create a compelling [X]-slide presentation on [topic] for [audience]. For each slide: (1) headline that communicates the key message, (2) 3-4 bullet points of content, (3) suggested visual (chart type, image, or diagram), (4) speaker notes (what to say, not what to show). Also include: opening and closing slide scripts, and tips for handling Q&A."},
+{t:"Difficult Conversation Navigator",p:"I need to have a difficult conversation with [person/role] about [situation]. Prepare me with: (1) the right mindset and framing, (2) an opening statement that is direct but empathetic, (3) anticipated responses and my counter-replies, (4) phrases to de-escalate if emotions rise, (5) how to reach a concrete agreement, (6) a follow-up plan to document outcomes."},
+{t:"Persuasion & Influence Toolkit",p:"Teach me 5 evidence-based persuasion techniques (e.g., Cialdini's principles) with practical workplace scenarios. For each technique: explain the psychology behind it, give a real example of how a Program Manager could use it (e.g., getting stakeholder buy-in, convincing a team to adopt a new process), and provide a script I can adapt."},
+{t:"Storytelling for Leaders",p:"Transform this work experience into a compelling leadership story: [paste experience]. Structure it using the SOAR framework (Situation, Obstacle, Action, Result). Then create 3 variations: (1) a 30-second version for elevator conversations, (2) a 2-minute version for interviews, (3) a 5-minute version for conference talks. Add emotional hooks and vivid details."},
+{t:"Constructive Feedback Framework",p:"I need to give feedback to [a peer / direct report / senior leader] about [situation]. For each audience, create: (1) a feedback script using the SBI model (Situation, Behavior, Impact), (2) phrases that keep the conversation constructive, (3) how to pivot if they become defensive, (4) positive reinforcement examples to balance the feedback, (5) a follow-up action plan."}
+]},
+{cat:"Work Automation",icon:"⚙️",items:[
+{t:"Email Thread Analyzer",p:"Here is an email thread: [paste email]. (1) Summarize the key points in 5 bullets, (2) identify action items with owners, (3) flag any unanswered questions, (4) draft a clear, professional reply that addresses every open point and proposes next steps. Match the tone of the original thread."},
+{t:"Meeting Notes to Action Plan",p:"Here are my meeting notes: [paste notes]. Transform them into: (1) a structured summary with decisions made, (2) an action items table (Task | Owner | Deadline | Priority | Status), (3) key risks or blockers mentioned, (4) follow-up meeting agenda items, (5) a Slack/Teams message I can send to attendees summarizing outcomes."},
+{t:"Notes to Executive Report",p:"Expand these rough notes into a polished executive report: [paste notes]. Structure: Executive Summary (3 sentences), Background, Key Findings (with data points), Recommendations (prioritized), Next Steps, and Appendix. Use professional tone suitable for VP-level readers. Keep it under 2 pages."},
+{t:"SOP Builder",p:"Create a comprehensive SOP for: [describe process]. Include: (1) Purpose and scope, (2) Roles and responsibilities (RACI matrix), (3) Step-by-step procedure with screenshots placeholders, (4) Tools required, (5) Quality checkpoints at each stage, (6) Common mistakes and troubleshooting, (7) Time estimates per step, (8) Version history table."},
+{t:"Data to Decision Brief",p:"Here is my data: [paste data]. Analyze and deliver: (1) 5 key insights ranked by business impact, (2) 3 risks with likelihood and mitigation, (3) 3 recommended actions with expected ROI, (4) a one-paragraph narrative for stakeholder presentation, (5) suggested data visualizations to tell this story effectively."},
+{t:"Template Factory",p:"Create a professional, reusable template for [type: proposal/report/email/project plan/status update]. Include: (1) all required sections with placeholder text, (2) formatting guidelines, (3) example filled-in version, (4) a checklist of what to verify before sending, (5) variants for different audiences (technical vs executive)."},
+{t:"Text Refinery",p:"Clean and refine this text: [paste text]. Apply: (1) fix all grammar, spelling, and punctuation, (2) restructure for logical flow, (3) eliminate filler words and redundancy, (4) strengthen weak verbs with action verbs, (5) adjust reading level to [professional/simple/technical], (6) provide a before/after comparison of key improvements made."},
+{t:"Automation Blueprint",p:"Design a complete automation workflow for: [describe task]. Provide: (1) current state process map, (2) automation opportunity analysis, (3) recommended tool stack (prioritize free/low-cost), (4) step-by-step implementation guide, (5) integration points between tools, (6) estimated time saved per week, (7) ROI calculation, (8) risks and rollback plan."},
+{t:"Proposal Architect",p:"Create a winning proposal for: [paste project info]. Include: (1) Professional cover page text, (2) Executive summary, (3) Problem statement, (4) Proposed solution with methodology, (5) Scope and deliverables table, (6) Timeline with milestones (Gantt-style), (7) Pricing with 3 tiers (Basic/Standard/Premium), (8) FAQ section, (9) Terms and next steps."},
+{t:"Debug & Troubleshoot Guide",p:"I am encountering this error: [paste error + context]. Help me: (1) explain the root cause in simple terms, (2) provide 3 solution approaches ranked by likelihood of success, (3) give step-by-step fix instructions for each approach, (4) explain how to verify the fix worked, (5) suggest preventive measures for the future, (6) list related errors I might encounter."}
+]},
+{cat:"Daily Task Automation",icon:"🤖",items:[
+{t:"Daily Routine Optimizer",p:"Here is my daily routine: [list tasks with time spent]. (1) Identify which tasks are automatable, delegatable, or eliminable, (2) suggest specific tools for each automation (Zapier, Google Scripts, Notion, IFTTT), (3) provide a step-by-step setup guide for the top 3 automations, (4) calculate total time saved weekly, (5) design my optimized daily schedule."},
+{t:"Email Workflow Engine",p:"I receive these types of emails daily: [list categories with volume]. Design a complete email management system: (1) Gmail filter rules for auto-categorization, (2) template responses for recurring queries, (3) auto-forwarding rules for delegation, (4) priority inbox configuration, (5) a daily email processing routine (touch-it-once method), (6) metrics to track email efficiency."},
+{t:"Auto Reporting Pipeline",p:"I create [weekly/monthly] reports in [tool]. Current process takes [X hours]. Design an automated pipeline: (1) data source connections and extraction, (2) cleaning and transformation logic, (3) visualization templates, (4) auto-distribution setup, (5) error handling and data validation, (6) implementation steps using [Excel/Sheets/Power BI]. Target: reduce to [Y minutes]."},
+{t:"Smart Priority System",p:"Here are my recurring responsibilities: [list]. Build an automated prioritization system: (1) scoring matrix using urgency, importance, effort, and impact, (2) a decision tree for daily task selection, (3) a Google Sheets/Notion template with formulas, (4) weekly review automation, (5) escalation criteria for when priorities conflict. Include the Eisenhower matrix as a visual framework."},
+{t:"Intelligent Calendar System",p:"My weekly commitments include: [list meetings, tasks, goals]. Design a smart calendar system: (1) time-blocking template by energy levels, (2) meeting-free focus blocks, (3) buffer time calculations, (4) auto-rescheduling rules when conflicts arise, (5) weekly planning ritual (30 min Sunday routine), (6) tools to implement this in Google Calendar or Outlook."},
+{t:"Content Automation Machine",p:"I want to create content about [topic] on [platforms]. Build an end-to-end pipeline: (1) idea generation system using trends and audience data, (2) content calendar template for 30 days, (3) writing workflow with AI assistance, (4) editing checklist, (5) scheduling tools and optimal posting times for India audience, (6) repurposing strategy (1 piece → 5 formats), (7) analytics tracking."},
+{t:"Digital File System",p:"My files across [Drive/Dropbox/local] are disorganized. Create: (1) a folder taxonomy with naming conventions, (2) automated sorting rules by file type, date, and project, (3) archival policy for old files, (4) search optimization tips, (5) backup automation setup, (6) a migration plan to move from current chaos to the new system in one weekend."},
+{t:"Workflow Audit & Fix",p:"Here is my current workflow for [process]: [describe]. Perform a full audit: (1) map the current state with bottlenecks highlighted, (2) identify every manual step that could be automated, (3) suggest specific tool integrations, (4) design the future state workflow, (5) create an implementation roadmap with quick wins first, (6) estimate ROI in hours saved per month."},
+{t:"No-Code Automation Academy",p:"I am new to automation tools. Create a structured learning path: (1) Week 1 — Zapier basics with 3 starter automations, (2) Week 2 — Google Apps Script for email and sheets, (3) Week 3 — Make.com for complex workflows, (4) Week 4 — Combining tools for end-to-end automation. Include step-by-step tutorials with screenshots descriptions."},
+{t:"Personal AI Command Center",p:"Design a personal AI-powered productivity system using ChatGPT, Google Workspace, and Notion. Cover: (1) morning planning routine with AI, (2) automated meeting prep and follow-up, (3) email drafting workflow, (4) weekly review and reflection automation, (5) knowledge management system, (6) daily prompts to run. Make it practical for a busy Program Manager."}
+]},
+{cat:"Content & Social Media",icon:"📱",items:[
+{t:"Viral Post Generator",p:"Transform this idea into 10 engaging social media posts: [paste idea]. For each post: (1) hook that stops the scroll (question, bold statement, or statistic), (2) 2-3 lines of valuable content, (3) a clear CTA, (4) 3-5 relevant hashtags, (5) best posting time. Create variations for LinkedIn, Twitter, and Instagram formats."},
+{t:"Short Video Script Writer",p:"Write a [15/30/60]-second video script on [topic]. Format: (1) Hook (first 3 seconds that grabs attention), (2) Problem or curiosity statement, (3) Key insight or tip (the meat), (4) Memorable closing line, (5) CTA with urgency. Also suggest: background music mood, text overlays, and visual transitions."},
+{t:"AI Content Humanizer",p:"Before writing anything, apply these rules to make content sound authentically human: Use clear, direct language. Write short sentences (under 20 words). Use active voice exclusively. Lead with practical insights. Replace every adjective with a specific fact. Speak to the reader as 'you'. Avoid: em dashes, metaphors, cliches, setup phrases like 'in conclusion', and overused words (delve, unlock, journey, game-changer, leverage). After writing, score it 1-10 on the 'human voice' scale."},
+{t:"Blog to Multi-Platform Content",p:"Here is my blog post / article: [paste]. Repurpose it into: (1) 3 LinkedIn posts with different angles, (2) a Twitter thread (8-10 tweets), (3) a carousel outline (8 slides), (4) a newsletter introduction, (5) 2 short video script ideas. Maintain the core message but adapt the tone and format for each platform."},
+{t:"Technical Article Writer",p:"Write a technical article on [topic] for [audience: developers/managers/executives]. Structure: (1) compelling title with SEO keywords, (2) introduction with the problem statement, (3) 3-5 sections with headers, code examples where relevant, and diagrams described, (4) real-world use case, (5) conclusion with key takeaways, (6) meta description for SEO."}
+]},
+{cat:"High-Income Skills 2026",icon:"💰",items:[
+{t:"Trending Skills Radar",p:"Act as a career strategist with access to 2026 market data. Identify 7 high-income skills with: (1) exploding demand but low supply, (2) relevance to someone with DevOps/Cloud/PM background, (3) estimated income premium (%), (4) time-to-market (months to become employable), (5) best entry point for each, (6) companies actively hiring for these skills. Include AI agents, platform engineering, and Web3 trends."},
+{t:"90-Day Skill Sprint",p:"Create a rigorous 90-day plan to achieve professional competency in [skill]. Structure: Month 1 — foundations (daily 1-hour blocks with specific resources), Month 2 — build 3 progressively complex projects, Month 3 — contribute to open source and create portfolio pieces. Include weekly checkpoints, community recommendations, and AI tools to accelerate learning."},
+{t:"Portfolio Project Accelerator",p:"Give me 5 portfolio-ready projects for [skill] that demonstrate real-world value. For each: (1) project name and description, (2) problem it solves, (3) tech stack, (4) step-by-step build guide, (5) GitHub repo structure, (6) README template, (7) deployment strategy (Vercel/AWS/Docker), (8) how to present it in interviews."},
+{t:"Tool Stack Mastery",p:"List the 7 essential tools professionals use daily for [skill] in 2026. For each tool: (1) what it does and why it matters, (2) a 5-day mastery plan (1 hour/day), (3) the one killer feature to learn first, (4) best YouTube tutorial or course, (5) a practice challenge to prove proficiency. Prioritize tools relevant to enterprise environments."},
+{t:"Skill Stacking for Premium Income",p:"I have strong skills in [primary skill]. Design a skill stacking strategy: (1) 3 complementary skills that create a rare and valuable combination, (2) for each combination, explain the career niche it opens, (3) estimate income potential vs single-skill practitioners, (4) provide a 6-month learning sequence, (5) real examples of professionals who use this stack successfully."},
+{t:"Standout Portfolio Blueprint",p:"Guide me to build a portfolio for [skill] that stands out in 2026. Cover: (1) portfolio platform recommendation (personal site vs GitHub vs Notion), (2) 4 project ideas with varying complexity, (3) case study template that tells the story behind each project, (4) SEO optimization for discoverability, (5) how to get testimonials as a beginner, (6) social proof strategies."},
+{t:"Continuous Growth Operating System",p:"Design a weekly operating system to keep growing in [skill] indefinitely. Include: (1) Monday — learning block (new concept + notes), (2) Wednesday — build block (apply to a project), (3) Friday — share block (post a learning on LinkedIn), (4) monthly skill assessment rubric, (5) quarterly goal review template, (6) KPIs to track (projects built, articles published, community contributions)."}
+]},
+{cat:"Productivity & Focus",icon:"💪",items:[
+{t:"Time Audit & Reclaim",p:"Here are my recurring weekly tasks with time spent: [list]. (1) Categorize each as deep work, shallow work, meetings, or admin, (2) identify the top 5 time wasters, (3) design an optimized weekly schedule using time-blocking, (4) suggest specific techniques to reclaim 5+ hours per week, (5) create a 'not-to-do' list for common productivity traps."},
+{t:"Peak Performance System",p:"Design a complete daily productivity system for a Program Manager handling multiple projects. Include: (1) morning startup routine (15 min), (2) task batching strategy, (3) deep work scheduling around meeting patterns, (4) energy management framework (match task difficulty to energy levels), (5) end-of-day shutdown ritual, (6) weekly review template. Tools: Google Calendar + Notion."},
+{t:"Decision Fatigue Eliminator",p:"I make too many small decisions daily that drain my energy. Help me: (1) identify the top 10 recurring decisions in my work, (2) create pre-made decision rules for each (if X then Y), (3) design templates that eliminate decisions (email responses, meeting agendas, review processes), (4) build a decision journal template, (5) suggest routines that reduce cognitive load."},
+{t:"Focus & Deep Work Protocol",p:"I struggle to do deep work because of constant interruptions. Create a focus protocol: (1) environmental setup checklist, (2) communication boundaries to set (with exact messages to send), (3) a Pomodoro-variant schedule optimized for my work type, (4) a focus music/environment recommendation, (5) recovery routine between focus sessions, (6) metrics to track focus time weekly."},
+{t:"Weekly Review Ritual",p:"Design a comprehensive 45-minute weekly review ritual I can do every Friday. Include: (1) wins and accomplishments log, (2) commitments review and cleanup, (3) next week priority setting (max 3 big rocks), (4) learning reflection, (5) relationship check-in (who to thank, follow up with, or connect), (6) personal energy assessment, (7) a Notion/Sheets template to capture all of this."},
+{t:"Meeting Optimization Audit",p:"I spend [X hours/week] in meetings. Analyze my meeting load and create: (1) a meeting necessity scorecard (which meetings to decline/delegate/shorten), (2) a 'no meeting' time-block strategy, (3) 15-minute meeting templates for recurring check-ins, (4) async alternatives for status update meetings, (5) a meeting preparation and follow-up system that saves time."}
+]},
+{cat:"Program Management",icon:"📋",items:[
+{t:"Project Status Report Generator",p:"Here are my project updates: [paste raw notes]. Generate a professional weekly status report with: (1) Executive Summary (3 lines), (2) RAG status for each workstream with justification, (3) Key Accomplishments this week, (4) Risks and Issues table (Risk | Impact | Likelihood | Mitigation | Owner), (5) Upcoming Milestones, (6) Decisions Needed from leadership. Format for email and PowerPoint."},
+{t:"Stakeholder Communication Plan",p:"I am managing a [project type] with these stakeholders: [list roles]. Create a stakeholder communication plan: (1) stakeholder mapping matrix (Power vs Interest grid), (2) communication frequency and channel for each stakeholder, (3) message templates for each audience type (technical vs executive vs client), (4) escalation path, (5) RACI matrix for key deliverables."},
+{t:"Risk Register Builder",p:"For my project [describe project], build a comprehensive risk register: (1) identify 15 potential risks across technical, operational, resource, and external categories, (2) score each for probability (1-5) and impact (1-5), (3) calculate risk priority number, (4) define mitigation and contingency plans for the top 5 risks, (5) create a risk monitoring dashboard template, (6) set up a weekly risk review agenda."},
+{t:"Sprint Planning Assistant",p:"Help me plan the next sprint for my team. Context: [paste backlog items, team size, velocity]. (1) Recommend sprint goal aligned to business objectives, (2) suggest story point allocation based on team capacity, (3) identify dependencies between stories, (4) flag potential blockers, (5) create a sprint board layout, (6) draft a sprint planning meeting agenda (30 min), (7) define acceptance criteria templates."},
+{t:"Retrospective Facilitator",p:"Design and facilitate a sprint retrospective for my team of [X people]. Context: [paste recent issues/wins]. (1) Choose a creative retro format (not just Start/Stop/Continue), (2) provide a facilitator script with time-boxed sections, (3) generate discussion prompts tailored to our context, (4) create a template for capturing action items with owners, (5) suggest follow-up mechanisms to ensure actions get completed."},
+{t:"Vendor Evaluation Framework",p:"I need to evaluate vendors for [service/product]. Create: (1) an evaluation criteria matrix with weighted scoring (technical capability, cost, scalability, support, security), (2) a comparison template for 3-5 vendors, (3) due diligence questions to ask each vendor, (4) a reference check script, (5) a recommendation report template for management, (6) contract negotiation talking points."},
+{t:"Program Dashboard Designer",p:"Design a program management dashboard for my portfolio of [X] projects. Include: (1) KPIs to track (budget, schedule, scope, quality, team health), (2) visualization recommendations for each metric, (3) data source mapping, (4) refresh frequency, (5) executive view vs detailed view layouts, (6) alerting thresholds for each KPI. Target tools: [Excel/Sheets/Jira/Power BI]."},
+{t:"Change Management Plan",p:"We are implementing [describe change: new tool/process/reorganization]. Create a change management plan: (1) impact assessment across teams, (2) stakeholder resistance analysis, (3) communication plan with key messages for each phase, (4) training schedule, (5) feedback collection mechanism, (6) success metrics, (7) 30-60-90 day milestone checklist, (8) rollback criteria if adoption fails."},
+{t:"Incident Post-Mortem Template",p:"We had an incident: [describe briefly]. Create a blameless post-mortem document: (1) incident timeline with key events, (2) root cause analysis using 5-Whys, (3) contributing factors, (4) impact assessment (users affected, duration, revenue impact), (5) immediate fixes applied, (6) long-term remediation actions with owners and deadlines, (7) lessons learned, (8) follow-up review date."},
+{t:"Resource Capacity Planner",p:"I manage [X] team members across [Y] projects. Current allocations: [paste]. Help me: (1) create a capacity planning spreadsheet with utilization rates, (2) identify over- and under-allocated team members, (3) recommend rebalancing options, (4) project capacity for the next quarter with planned PTO, (5) create a hiring justification template if we are short-staffed, (6) design a skills matrix for cross-training opportunities."}
+]},
+{cat:"DevOps & Technical",icon:"🔧",items:[
+{t:"Architecture Decision Record",p:"I need to make a technical decision about [describe: e.g., choosing between Kubernetes and ECS]. Create an Architecture Decision Record (ADR): (1) Title and status, (2) Context and problem statement, (3) Decision drivers, (4) Options considered with pros/cons matrix, (5) Recommended decision with rationale, (6) Consequences (positive, negative, risks), (7) Follow-up actions. Use a table format for comparison."},
+{t:"CI/CD Pipeline Design",p:"Design a CI/CD pipeline for [application type] deployed on [AWS/Azure/GCP]. Include: (1) source code management branching strategy, (2) build stage configuration, (3) testing stages (unit, integration, security scan, performance), (4) deployment strategy (blue-green/canary/rolling), (5) environment promotion workflow, (6) rollback procedure, (7) monitoring and alerting setup. Provide as YAML pseudocode."},
+{t:"Cloud Cost Optimization",p:"My team spends [amount/month] on [AWS/Azure]. Here is a summary of our infrastructure: [paste]. Help me: (1) identify the top 5 cost-saving opportunities, (2) recommend reserved instance or savings plan strategy, (3) suggest right-sizing recommendations, (4) design a cost monitoring dashboard, (5) create a FinOps governance process, (6) estimate total savings potential."},
+{t:"Runbook Generator",p:"Create a detailed operational runbook for: [describe system/process]. Include: (1) system overview and architecture diagram description, (2) health check procedures, (3) common issue troubleshooting (symptom → diagnosis → fix), (4) escalation matrix, (5) disaster recovery steps, (6) maintenance windows and procedures, (7) contact list. Format for a new team member to follow independently."},
+{t:"Technical Debt Assessment",p:"Help me assess and prioritize technical debt in my project. (1) Create a technical debt categorization framework (code, architecture, infrastructure, documentation, testing), (2) provide a scoring template for impact vs effort, (3) generate a prioritized backlog template, (4) draft a business case for technical debt reduction, (5) suggest a sustainable approach (e.g., 20% sprint allocation), (6) define metrics to track progress."},
+{t:"Security Review Checklist",p:"Create a comprehensive security review checklist for [application/infrastructure]. Cover: (1) authentication and authorization, (2) data encryption (at rest and in transit), (3) API security, (4) infrastructure hardening, (5) logging and monitoring, (6) HIPAA/SOC2 compliance items, (7) dependency vulnerability scanning, (8) incident response preparation. Mark each item as Critical/High/Medium priority."}
+]},
+];
+
+
+let activeCategory='All';
+let searchTerm='';
+
+function init(){
+ const catsEl=document.getElementById('cats');
+ const total=DATA.reduce((s,c)=>s+c.items.length,0);
+ let html=`<button class="cat-btn active" onclick="filterCat('All',this)">All<span class="cat-count">${total}</span></button>`;
+ DATA.forEach(c=>{html+=`<button class="cat-btn" onclick="filterCat('${c.cat}',this)">${c.icon} ${c.cat}<span class="cat-count">${c.items.length}</span></button>`;});
+ catsEl.innerHTML=html;
+ render();
+}
+
+function filterCat(cat,btn){
+ activeCategory=cat;
+ document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ render();
+}
+
+function hl(text,term){
+ if(!term)return text;
+ const re=new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`,'gi');
+ return text.replace(re,'<mark>$1</mark>');
+}
+
+function render(){
+ const q=searchTerm.toLowerCase();
+ let html='',count=0,gNum=0;
+ DATA.forEach(cat=>{
+  if(activeCategory!=='All'&&cat.cat!==activeCategory)return;
+  const filtered=cat.items.filter(i=>!q||i.t.toLowerCase().includes(q)||i.p.toLowerCase().includes(q));
+  if(!filtered.length)return;
+  html+=`<div class="section-hdr"><span class="emoji">${cat.icon}</span>${cat.cat}</div><div class="grid">`;
+  filtered.forEach((item,i)=>{
+   count++;gNum++;
+   html+=`<div class="card" onclick="toggleCard(this)" id="card-${gNum}">
+    <span class="card-num">#${gNum}</span>
+    <h3>${hl(item.t,searchTerm)}</h3>
+    <div class="card-prompt">${hl(item.p,searchTerm)}</div>
+    <span class="card-tag">${cat.cat}</span>
+    <div class="card-actions"><button class="copy-btn" onclick="copyPrompt(event,'${gNum}')">📋 Copy Prompt</button></div>
+   </div>`;
+  });
+  html+=`</div>`;
+ });
+ document.getElementById('content').innerHTML=html;
+ document.getElementById('noResults').style.display=count?'none':'block';
+ document.getElementById('stats').textContent=`Showing ${count} of ${DATA.reduce((s,c)=>s+c.items.length,0)} prompts`;
+}
+
+function toggleCard(el){if(!window.getSelection().toString())el.classList.toggle('expanded');}
+
+function copyPrompt(e,id){
+ e.stopPropagation();
+ const card=document.getElementById('card-'+id);
+ const text=card.querySelector('.card-prompt').textContent;
+ navigator.clipboard.writeText(text).then(()=>{
+  const btn=e.target;btn.textContent='✅ Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='📋 Copy Prompt';btn.classList.remove('copied');},1500);
+ });
+}
+
+document.getElementById('searchInput').addEventListener('input',function(e){
+ searchTerm=e.target.value;render();
+});
+
+window.addEventListener('scroll',()=>{
+ document.getElementById('scrollTop').style.display=window.scrollY>300?'flex':'none';
+});
+
+init();
+</script>
+</body>
+</html>

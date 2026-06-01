@@ -1,0 +1,252 @@
+{
+  "projects": [
+    {
+      "id": "p1",
+      "name": "Auth Service",
+      "color": "#7c5cfc",
+      "health": "green",
+      "progress": 46,
+      "budget": 85,
+      "quality": 92,
+      "velocity": 88
+    },
+    {
+      "id": "p2",
+      "name": "Payment Gateway",
+      "color": "#f472b6",
+      "health": "amber",
+      "progress": 52,
+      "budget": 70,
+      "quality": 80,
+      "velocity": 65
+    },
+    {
+      "id": "p3",
+      "name": "Dashboard UI",
+      "color": "#34d399",
+      "health": "green",
+      "progress": 91,
+      "budget": 95,
+      "quality": 97,
+      "velocity": 94
+    },
+    {
+      "id": "p4",
+      "name": "Data Pipeline",
+      "color": "#fbbf24",
+      "health": "red",
+      "progress": 35,
+      "budget": 45,
+      "quality": 60,
+      "velocity": 40
+    },
+    {
+      "name": "test project",
+      "health": "green",
+      "progress": 0,
+      "budget": 0,
+      "quality": 0,
+      "velocity": 0,
+      "id": "id_q1blufcvx",
+      "color": "#60a5fa"
+    }
+  ],
+  "focus": [
+    {
+      "id": "f1",
+      "projectId": "p1",
+      "items": [
+        "Implement OAuth 2.0 PKCE flow",
+        "Migrate user sessions to Redis",
+        "Add MFA via TOTP",
+        "Set up rate limiting on login endpoints",
+        "Write integration tests for SSO"
+      ]
+    },
+    {
+      "id": "f2",
+      "projectId": "p2",
+      "items": [
+        "Integrate Stripe API v3",
+        "PCI DSS compliance audit",
+        "Build refund workflow",
+        "Set up webhook listeners",
+        "Load test payment processing"
+      ]
+    },
+    {
+      "id": "f3",
+      "projectId": "p3",
+      "items": [
+        "Redesign analytics dashboard",
+        "Implement dark mode toggle",
+        "Add real-time WebSocket updates",
+        "Optimize chart rendering performance",
+        "Create accessibility audit report"
+      ]
+    },
+    {
+      "id": "f4",
+      "projectId": "p4",
+      "items": [
+        "Fix data ingestion bottleneck",
+        "Migrate to Apache Kafka",
+        "Implement dead-letter queue",
+        "Build data quality monitoring",
+        "Set up alerting for pipeline failures"
+      ]
+    },
+    {
+      "id": "id_cwusqkyt8",
+      "projectId": "id_q1blufcvx",
+      "items": [
+        "hello"
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "id": "t1",
+      "projectId": "p1",
+      "phase": "past",
+      "date": "2026-04-15",
+      "title": "Auth v1 Released",
+      "desc": "Basic username/password auth shipped to production"
+    },
+    {
+      "id": "t2",
+      "projectId": "p2",
+      "phase": "past",
+      "date": "2026-04-28",
+      "title": "Payment POC Completed",
+      "desc": "Stripe sandbox integration validated"
+    },
+    {
+      "id": "t3",
+      "projectId": "p3",
+      "phase": "past",
+      "date": "2026-05-05",
+      "title": "UI Design System Finalized",
+      "desc": "Component library published to npm"
+    },
+    {
+      "id": "t4",
+      "projectId": "p1",
+      "phase": "present",
+      "date": "2026-06-01",
+      "title": "OAuth 2.0 Implementation",
+      "desc": "PKCE flow and SSO integration in progress"
+    },
+    {
+      "id": "t5",
+      "projectId": "p4",
+      "phase": "present",
+      "date": "2026-06-01",
+      "title": "Kafka Migration Sprint",
+      "desc": "Replacing RabbitMQ with Kafka for better throughput"
+    },
+    {
+      "id": "t6",
+      "projectId": "p3",
+      "phase": "present",
+      "date": "2026-06-01",
+      "title": "Dashboard v2 Beta",
+      "desc": "Real-time analytics and dark mode in testing"
+    },
+    {
+      "id": "t7",
+      "projectId": "p2",
+      "phase": "future",
+      "date": "2026-06-15",
+      "title": "PCI DSS Compliance Audit",
+      "desc": "Scheduled external audit for payment security"
+    },
+    {
+      "id": "t8",
+      "projectId": "p1",
+      "phase": "future",
+      "date": "2026-07-01",
+      "title": "MFA Rollout",
+      "desc": "Multi-factor authentication for all users"
+    },
+    {
+      "id": "t9",
+      "projectId": "p4",
+      "phase": "future",
+      "date": "2026-07-15",
+      "title": "Data Quality Dashboard",
+      "desc": "Real-time data quality monitoring and alerting"
+    }
+  ],
+  "risks": [
+    {
+      "id": "r1",
+      "projectId": "p4",
+      "severity": "high",
+      "title": "Data pipeline throughput degradation",
+      "action": "Migrate to Kafka, add horizontal scaling, implement backpressure",
+      "status": "in-progress"
+    },
+    {
+      "id": "r2",
+      "projectId": "p2",
+      "severity": "high",
+      "title": "PCI DSS compliance deadline at risk",
+      "action": "Accelerate audit prep, engage compliance consultant",
+      "status": "in-progress"
+    },
+    {
+      "id": "r3",
+      "projectId": "p1",
+      "severity": "medium",
+      "title": "Session management scalability",
+      "action": "Migrate to Redis cluster, implement session partitioning",
+      "status": "in-progress"
+    },
+    {
+      "id": "r4",
+      "projectId": "p3",
+      "severity": "low",
+      "title": "Chart library performance on mobile",
+      "action": "Evaluate canvas-based alternatives, lazy-load charts",
+      "status": "mitigated"
+    },
+    {
+      "id": "r5",
+      "projectId": "p2",
+      "severity": "medium",
+      "title": "Stripe API rate limits during peak",
+      "action": "Implement request queuing and caching strategy",
+      "status": "open"
+    }
+  ],
+  "pulse": {
+    "2026-W22": {
+      "ups": [
+        "Dashboard v2 beta received positive user feedback",
+        "Auth service latency reduced by 40%",
+        "Successfully onboarded 2 new team members"
+      ],
+      "downs": [
+        "Data pipeline outage on Wednesday—2h downtime",
+        "Payment gateway integration blocked by third-party API issue"
+      ]
+    },
+    "2026-W21": {
+      "ups": [
+        "Completed design system documentation",
+        "All critical security patches applied",
+        "Sprint velocity improved 15%"
+      ],
+      "downs": [
+        "Missed deadline for Kafka migration milestone",
+        "Key developer on sick leave impacting Auth timeline"
+      ]
+    },
+    "2026-W23": {
+      "ups": [],
+      "downs": []
+    }
+  },
+  "lastUpdated": "2026-06-03"
+}

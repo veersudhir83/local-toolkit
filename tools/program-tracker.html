@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Program Status Tracker — track health, focus areas, timelines, risks, and weekly pulse across multiple sub-projects." />
+  <title>Program Status Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #06060f;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.10);
+      --text: #e8e8f0;
+      --text-dim: #8888a8;
+      --text-muted: #555570;
+      --accent: #7c5cfc;
+      --accent-glow: rgba(124,92,252,0.35);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --pink: #f472b6;
+      --cyan: #22d3ee;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: .25s cubic-bezier(.4,0,.2,1);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* Background animated gradient orbs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: .18;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #7c5cfc, #3b82f6);
+      top: -200px; left: -100px;
+      animation: float1 20s ease-in-out infinite;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #f472b6, #7c5cfc);
+      bottom: -200px; right: -100px;
+      animation: float2 25s ease-in-out infinite;
+    }
+    @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-80px)} }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    :root { --sidebar-width: 230px; }
+    .app.collapsed-sidebar { --sidebar-width: 64px; }
+    .app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ───────────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      background: rgba(10, 10, 20, 0.92);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid var(--glass-border);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: hidden;
+      animation: fadeIn .4s ease-out;
+      transition: width var(--transition), min-width var(--transition), background var(--transition), border-right-color var(--transition);
+    }
+
+    /* ── Header (compact, in sidebar) ──────────────────────── */
+    .header {
+      padding: 18px 16px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+      transition: padding var(--transition);
+    }
+    .header-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .header h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c5cfc, #60a5fa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+    .header p { color: var(--text-dim); margin-top: 2px; font-size: .7rem; }
+
+    /* Collapsible trigger button */
+    .sidebar-toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-dim);
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .sidebar-toggle-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* Last updated selector styling */
+    .last-updated-wrap {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .last-updated-wrap label {
+      font-size: .62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+    }
+    .last-updated-input {
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      font-size: .78rem;
+      font-family: inherit;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+    .last-updated-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* ── Project Sidebar Nav ───────────────────────────────── */
+    .sidebar-section-label {
+      font-size: .68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      padding: 16px 16px 6px;
+    }
+    .project-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 8px 12px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .project-chip {
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .project-chip::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--chip-color, var(--text-muted));
+    }
+    .project-chip.all-projects::before {
+      background: linear-gradient(135deg, #7c5cfc, #f472b6);
+    }
+    .project-chip:hover { background: var(--surface-hover); color: var(--text); }
+    .project-chip.active {
+      background: linear-gradient(135deg, rgba(124,92,252,0.2), rgba(60,165,250,0.1));
+      color: #fff;
+      border-color: rgba(124,92,252,0.3);
+    }
+    .project-chip.all-projects { font-weight: 600; }
+
+    /* Sidebar Actions */
+    .sidebar-actions {
+      padding: 8px 12px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--glass-border);
+    }
+    .sidebar-action-btn {
+      width: 100%;
+      justify-content: center;
+      font-size: .8rem !important;
+      padding: 8px 12px !important;
+    }
+
+    /* Sidebar Footer & Theme Toggle */
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--glass-border);
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+    .theme-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--text-dim);
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .theme-toggle-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    /* Collapsed Sidebar Styles */
+    .app.collapsed-sidebar .sidebar-toggle-btn {
+      transform: rotate(180deg);
+    }
+    .app.collapsed-sidebar .header h1,
+    .app.collapsed-sidebar .header p,
+    .app.collapsed-sidebar .last-updated-wrap,
+    .app.collapsed-sidebar .sidebar-section-label,
+    .app.collapsed-sidebar .chip-text,
+    .app.collapsed-sidebar .sidebar-action-btn .btn-text,
+    .app.collapsed-sidebar .theme-toggle-btn .theme-text {
+      display: none !important;
+    }
+    .app.collapsed-sidebar .header {
+      padding: 18px 0 14px;
+    }
+    .app.collapsed-sidebar .header-main {
+      justify-content: center;
+      width: 100%;
+    }
+    .app.collapsed-sidebar .project-chip {
+      padding: 10px 0;
+      justify-content: center;
+      gap: 0;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      margin: 2px auto;
+    }
+    .app.collapsed-sidebar .sidebar-actions {
+      padding: 12px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .app.collapsed-sidebar .sidebar-action-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0 !important;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app.collapsed-sidebar .sidebar-action-btn .btn-icon {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .app.collapsed-sidebar .sidebar-footer {
+      padding: 12px 0;
+      display: flex;
+      justify-content: center;
+    }
+    .app.collapsed-sidebar .theme-toggle-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      justify-content: center;
+      gap: 0;
+    }
+    .app.collapsed-sidebar .theme-toggle-btn .theme-icon {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .app.collapsed-sidebar .back-link-wrap {
+      display: none !important;
+    }
+
+    /* ── Light Theme Overrides ──────────────────────────────── */
+    body.light-theme {
+      --bg: #f1f5f9; /* slate 100 */
+      --surface: rgba(0, 0, 0, 0.03);
+      --surface-hover: rgba(0, 0, 0, 0.06);
+      --glass: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a; /* slate 900 */
+      --text-dim: #475569; /* slate 600 */
+      --text-muted: #94a3b8; /* slate 400 */
+      --accent: #4f46e5; /* indigo 600 */
+      --accent-glow: rgba(79, 70, 229, 0.15);
+    }
+    body.light-theme::before,
+    body.light-theme::after {
+      opacity: 0.06;
+    }
+    body.light-theme .sidebar {
+      background: rgba(248, 250, 252, 0.92);
+      border-right-color: rgba(0, 0, 0, 0.08);
+    }
+    body.light-theme .modal {
+      background: #ffffff;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      color: #0f172a;
+    }
+    body.light-theme .form-group input, 
+    body.light-theme .form-group select, 
+    body.light-theme .form-group textarea {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    body.light-theme .tab-btn.active {
+      background: #ffffff;
+      color: var(--accent);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    body.light-theme .project-chip.active {
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--accent);
+      border-color: rgba(79, 70, 229, 0.2);
+    }
+    body.light-theme .data-toolbar {
+      background: rgba(241, 245, 249, 0.9);
+      border-top-color: rgba(0, 0, 0, 0.08);
+    }
+    body.light-theme .sync-indicator {
+      background: rgba(0, 0, 0, 0.02);
+    }
+    body.light-theme .metric-item {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    /* ── Main Content ──────────────────────────────────────── */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 20px 28px 80px;
+      max-width: 1100px;
+      transition: margin-left var(--transition);
+    }
+
+    /* ── Tabs ──────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 5px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 28px;
+      overflow-x: auto;
+      animation: fadeInUp .5s ease-out .2s both;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 500;
+      border-radius: calc(var(--radius) - 4px);
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      position: relative;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(124,92,252,0.25), rgba(60,165,250,0.15));
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(124,92,252,0.2);
+    }
+    .tab-btn .tab-icon { margin-right: 6px; }
+
+    /* ── Tab Content ───────────────────────────────────────── */
+    .tab-content { display: none; animation: fadeIn .35s ease-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Cards ─────────────────────────────────────────────── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+    }
+    .card:hover { border-color: rgba(255,255,255,0.16); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--glass-border), transparent);
+    }
+
+    /* ── RAG Status Badges ─────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: .75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-green { background: rgba(52,211,153,0.15); color: var(--green); }
+    .badge-amber { background: rgba(251,191,36,0.15); color: var(--amber); }
+    .badge-red { background: rgba(248,113,113,0.15); color: var(--red); }
+    .badge-blue { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .badge-grey { background: rgba(136,136,168,0.15); color: var(--text-dim); }
+
+    .badge-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .badge-green .badge-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .badge-amber .badge-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .badge-red .badge-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+    /* ── Progress Bar ──────────────────────────────────────── */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-label { font-size: .8rem; font-weight: 600; color: var(--text-dim); min-width: 38px; text-align: right; }
+
+    /* ── Health Grid ───────────────────────────────────────── */
+    .health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+
+    .health-card .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .metric-item {
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+    .metric-value { font-size: 1.5rem; font-weight: 700; }
+    .metric-label { font-size: .72rem; color: var(--text-dim); margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
+
+    /* ── Focus Areas ───────────────────────────────────────── */
+    .focus-list { list-style: none; }
+    .focus-list li {
+      padding: 10px 14px;
+      border-left: 3px solid var(--accent);
+      background: rgba(124,92,252,0.04);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 8px;
+      font-size: .9rem;
+      transition: var(--transition);
+    }
+    .focus-list li:hover { background: rgba(124,92,252,0.08); }
+
+    /* ── Timeline ──────────────────────────────────────────── */
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--green), var(--accent), var(--blue), var(--text-muted));
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+      animation: fadeInUp .4s ease-out;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -27px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 3px solid;
+      background: var(--bg);
+      z-index: 1;
+    }
+    .timeline-item.past::before { border-color: var(--green); box-shadow: 0 0 8px rgba(52,211,153,0.4); }
+    .timeline-item.present::before { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); animation: pulse 2s infinite; }
+    .timeline-item.future::before { border-color: var(--text-muted); }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 8px var(--accent-glow)} 50%{box-shadow:0 0 18px var(--accent-glow)} }
+
+    .timeline-date { font-size: .75rem; color: var(--text-dim); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+    .timeline-title { font-weight: 600; font-size: .95rem; }
+    .timeline-desc { font-size: .85rem; color: var(--text-dim); margin-top: 3px; }
+
+    .timeline-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      background: var(--surface);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .filter-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .filter-btn.active { background: var(--accent); color: #fff; border-color: transparent; }
+
+    /* ── Risks Table ───────────────────────────────────────── */
+    .risk-cards { display: grid; gap: 14px; }
+    .risk-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: start;
+    }
+    .risk-severity {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+    .risk-severity.high { background: rgba(248,113,113,0.15); color: var(--red); }
+    .risk-severity.medium { background: rgba(251,191,36,0.15); color: var(--amber); }
+    .risk-severity.low { background: rgba(52,211,153,0.15); color: var(--green); }
+    .risk-title { font-weight: 600; font-size: .92rem; }
+    .risk-action { font-size: .83rem; color: var(--text-dim); margin-top: 4px; }
+    .risk-project-tag { font-size: .72rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Weekly Pulse ──────────────────────────────────────── */
+    .pulse-week {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .pulse-week { grid-template-columns: 1fr; } }
+
+    .pulse-col h3 {
+      font-size: .9rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pulse-col.ups h3 { color: var(--green); }
+    .pulse-col.downs h3 { color: var(--red); }
+
+    .pulse-item {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      font-size: .88rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: var(--transition);
+    }
+    .pulse-col.ups .pulse-item {
+      background: rgba(52,211,153,0.06);
+      border-left: 3px solid var(--green);
+    }
+    .pulse-col.downs .pulse-item {
+      background: rgba(248,113,113,0.06);
+      border-left: 3px solid var(--red);
+    }
+    .pulse-item:hover { transform: translateX(4px); }
+    .pulse-item-text { flex: 1; }
+    .pulse-item .delete-btn {
+      opacity: 0;
+      transition: opacity .2s;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .9rem;
+      padding: 0 4px;
+    }
+    .pulse-item:hover .delete-btn { opacity: 1; }
+
+    .week-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .week-selector button {
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .week-selector button:hover { background: var(--surface-hover); }
+    .week-label { font-weight: 600; font-size: .95rem; }
+
+    /* ── Buttons ───────────────────────────────────────────── */
+    .btn {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-family: inherit;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px var(--accent-glow); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--glass-border);
+    }
+    .btn-ghost:hover { background: var(--surface); color: var(--text); }
+    .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); }
+    .btn-danger:hover { background: rgba(248,113,113,0.25); }
+    .btn-sm { padding: 6px 14px; font-size: .78rem; }
+
+    /* ── Modal ─────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn .2s;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #12121f;
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: fadeInUp .3s ease-out;
+    }
+    .modal h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .82rem; font-weight: 500; color: var(--text-dim); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: .88rem;
+      transition: var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      :root { --sidebar-width: 200px; }
+      .main-content { padding: 16px 18px 80px; }
+    }
+    @media (max-width: 768px) {
+      :root { --sidebar-width: 0px; }
+      .sidebar {
+        width: 100%;
+        min-width: 100%;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 8px 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      .sidebar .header { border-bottom: none; padding: 6px 12px; }
+      .sidebar .header h1 { font-size: .95rem; }
+      .sidebar .header p { display: none; }
+      .sidebar .sidebar-section-label { display: none; }
+      .sidebar .project-bar {
+        flex-direction: row;
+        gap: 6px;
+        padding: 4px 0;
+        overflow-x: auto;
+        flex: 0;
+      }
+      .sidebar .project-chip { white-space: nowrap; padding: 6px 12px; font-size: .75rem; }
+      .sidebar-toggle-btn {
+        display: none !important;
+      }
+      .sidebar-actions {
+        padding: 0 8px;
+        border-top: none;
+        margin-left: auto;
+      }
+      .sidebar-action-btn {
+        padding: 6px 12px !important;
+        font-size: .75rem !important;
+        width: auto !important;
+        height: auto !important;
+        border-radius: var(--radius-sm) !important;
+      }
+      .sidebar-action-btn .btn-text {
+        display: inline !important;
+      }
+      .sidebar-footer {
+        padding: 0 8px;
+        border-top: none;
+        margin-top: 0;
+      }
+      .theme-toggle-btn {
+        padding: 6px !important;
+        width: auto !important;
+        height: auto !important;
+        border-radius: 50% !important;
+      }
+      .theme-toggle-btn .theme-text {
+        display: none !important;
+      }
+      .last-updated-wrap {
+        margin-top: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+      }
+      .last-updated-wrap label {
+        display: none !important;
+      }
+      .last-updated-input {
+        padding: 3px 6px;
+        font-size: 0.7rem;
+        width: auto;
+      }
+      .app { flex-direction: column; }
+      .main-content { margin-left: 0; padding: 12px 12px 80px; }
+      .health-grid { grid-template-columns: 1fr; }
+      .tabs { flex-wrap: nowrap; }
+      .tab-btn { font-size: .72rem; padding: 10px 8px; }
+      .risk-card { grid-template-columns: auto 1fr; }
+      .risk-card .badge { display: none; }
+    }
+
+    /* ── Empty state ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-dim);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { margin-bottom: 16px; }
+
+    /* ── Add Button Row ────────────────────────────────────── */
+    .add-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+    }
+
+    /* ── Overall Summary Cards ─────────────────────────────── */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      text-align: center;
+    }
+    .summary-card .big { font-size: 2rem; font-weight: 800; }
+    .summary-card .label { font-size: .72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+
+    /* ── Scrollbar ─────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+    /* Color coding per project */
+    .proj-color-0 { --proj: #7c5cfc; }
+    .proj-color-1 { --proj: #f472b6; }
+    .proj-color-2 { --proj: #34d399; }
+    .proj-color-3 { --proj: #fbbf24; }
+    .proj-color-4 { --proj: #60a5fa; }
+    .proj-color-5 { --proj: #22d3ee; }
+
+    .main-content { padding-bottom: 40px; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <header class="header">
+        <div class="back-link-wrap" style="margin-bottom: 12px;">
+          <a href="../index.html" style="color: var(--text-dim); text-decoration: none; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition);" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-dim)'">
+            <span>←</span> <span class="theme-text">Back to LocalKit</span>
+          </a>
+        </div>
+        <div class="header-main">
+          <h1 id="programTitle">Program Tracker</h1>
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Collapse Sidebar">◀</button>
+        </div>
+        <p id="programSubtitle">Status across sub-projects</p>
+        <div class="last-updated-wrap" id="lastUpdatedWrap">
+          <label for="lastUpdatedInput">Updated</label>
+          <input type="date" id="lastUpdatedInput" class="last-updated-input" onchange="updateLastUpdated(this.value)" />
+        </div>
+      </header>
+      <div class="sidebar-section-label" id="sidebarProjectsLabel">Projects</div>
+      <div class="project-bar" id="projectBar"></div>
+      <div class="sidebar-actions" id="sidebarActions">
+        <button class="btn btn-primary btn-sm sidebar-action-btn" onclick="openProjectModal()" title="Add Project" style="margin-bottom: 6px;">
+          <span class="btn-icon">＋</span><span class="btn-text">Add Project</span>
+        </button>
+        <button class="btn btn-ghost btn-sm sidebar-action-btn" onclick="downloadJSON()" title="Download JSON" style="margin-bottom: 6px;">
+          <span class="btn-icon">⬇</span><span class="btn-text">Download JSON</span>
+        </button>
+        <button class="btn btn-ghost btn-sm sidebar-action-btn" onclick="document.getElementById('jsonFileInput').click()" title="Import JSON" style="margin-bottom: 6px;">
+          <span class="btn-icon">⬆</span><span class="btn-text">Import JSON</span>
+        </button>
+        <input type="file" id="jsonFileInput" accept=".json" onchange="importJSON(event)" style="display: none;" />
+      </div>
+      <footer class="sidebar-footer" id="sidebarFooter">
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Switch to Light Mode">
+          <span class="theme-icon">☀️</span><span class="theme-text">Light Mode</span>
+        </button>
+      </footer>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+    <!-- Tabs -->
+    <nav class="tabs" id="tabNav">
+      <button class="tab-btn active" data-tab="health"><span class="tab-icon">💊</span>Program Health</button>
+      <button class="tab-btn" data-tab="focus"><span class="tab-icon">🎯</span>Focus Areas</button>
+      <button class="tab-btn" data-tab="timeline"><span class="tab-icon">📅</span>Timeline</button>
+      <button class="tab-btn" data-tab="risks"><span class="tab-icon">⚠️</span>Risks</button>
+      <button class="tab-btn" data-tab="pulse"><span class="tab-icon">📊</span>Weekly Pulse</button>
+    </nav>
+
+    <!-- ═══════════ Tab 1: Program Health ═══════════ -->
+    <div class="tab-content active" id="tab-health">
+      <div class="summary-strip" id="summaryStrip"></div>
+      <div class="health-grid" id="healthGrid"></div>
+    </div>
+
+    <!-- ═══════════ Tab 2: Focus Areas ═══════════ -->
+    <div class="tab-content" id="tab-focus">
+      <div class="add-row"><button class="btn btn-primary btn-sm" onclick="openFocusModal()">＋ Add Focus Item</button></div>
+      <div id="focusContainer"></div>
+    </div>
+
+    <!-- ═══════════ Tab 3: Timeline ═══════════ -->
+    <div class="tab-content" id="tab-timeline">
+      <div class="timeline-filters" id="timelineFilters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="past">✅ Past</button>
+        <button class="filter-btn" data-filter="present">🔄 Present</button>
+        <button class="filter-btn" data-filter="future">🔮 Future</button>
+      </div>
+      <div class="add-row"><button class="btn btn-primary btn-sm" onclick="openTimelineModal()">＋ Add Activity</button></div>
+      <div class="timeline" id="timelineContainer"></div>
+    </div>
+
+    <!-- ═══════════ Tab 4: Risks ═══════════ -->
+    <div class="tab-content" id="tab-risks">
+      <div class="add-row"><button class="btn btn-primary btn-sm" onclick="openRiskModal()">＋ Add Risk</button></div>
+      <div class="risk-cards" id="riskContainer"></div>
+    </div>
+
+    <!-- ═══════════ Tab 5: Weekly Pulse ═══════════ -->
+    <div class="tab-content" id="tab-pulse">
+      <div class="week-selector">
+        <button onclick="changeWeek(-1)">‹</button>
+        <span class="week-label" id="weekLabel"></span>
+        <button onclick="changeWeek(1)">›</button>
+        <button class="btn btn-ghost btn-sm" onclick="goToCurrentWeek()" style="margin-left:8px;font-size:.75rem">⦿ Today</button>
+      </div>
+      <div class="add-row">
+        <button class="btn btn-primary btn-sm" onclick="openPulseModal('up')" style="margin-right:8px">＋ Add Up</button>
+        <button class="btn btn-danger btn-sm" onclick="openPulseModal('down')">＋ Add Down</button>
+      </div>
+      <div class="pulse-week" id="pulseContainer"></div>
+    </div>
+    </div><!-- /main-content -->
+  </div>
+
+
+
+  <!-- ═══════════ Modal ═══════════ -->
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <script>
+    /* ────────────────────────────────────────────────────
+       DATA LAYER (JSON file + localStorage)
+       - Source of truth: program-tracker-data.json
+       - Runtime working copy: localStorage
+       - Export: Download JSON button
+       - Import: Upload JSON file
+    ──────────────────────────────────────────────────── */
+    const STORAGE_KEY = 'program_tracker_data';
+    const JSON_SOURCE_KEY = 'program_tracker_source_hash';
+    const DATA_FILE = 'program-tracker-data.json';
+
+    const PROJECT_COLORS = ['#7c5cfc','#f472b6','#34d399','#fbbf24','#60a5fa','#22d3ee','#a78bfa','#fb923c'];
+
+    let data;
+    let sourceData = null; // the original data fetched from JSON file
+
+    // Simple hash to detect changes between source and local data
+    function hashData(obj) {
+      return JSON.stringify(obj);
+    }
+
+    // Update the sync indicator in the toolbar
+    function updateSyncStatus() {}
+
+    // Fetch data from the JSON file
+    async function fetchSourceData() {
+      try {
+        const resp = await fetch(DATA_FILE + '?t=' + Date.now());
+        if (!resp.ok) throw new Error('Failed to fetch ' + DATA_FILE);
+        const jsonData = await resp.json();
+        return jsonData;
+      } catch (err) {
+        console.warn('Could not load ' + DATA_FILE + ':', err.message);
+        return null;
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      updateSyncStatus();
+    }
+
+    // Download current data as JSON file
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'program-tracker-data.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Import data from an uploaded JSON file
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          // Validate basic structure
+          if (!imported.projects || !Array.isArray(imported.projects)) {
+            alert('Invalid JSON: missing "projects" array');
+            return;
+          }
+          // Ensure all required top-level keys exist
+          if (!imported.focus) imported.focus = [];
+          if (!imported.timeline) imported.timeline = [];
+          if (!imported.risks) imported.risks = [];
+          if (!imported.pulse) imported.pulse = {};
+
+          data = imported;
+          sourceData = JSON.parse(JSON.stringify(imported)); // update source reference
+          saveData();
+          renderAll();
+          initLastUpdated();
+          updateSyncStatus();
+          showToast('Data imported successfully!');
+        } catch (err) {
+          alert('Failed to parse JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      // Reset file input so same file can be re-imported
+      event.target.value = '';
+    }
+
+
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      Object.assign(toast.style, {
+        position: 'fixed',
+        top: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: 'linear-gradient(135deg, #7c5cfc, #3b82f6)',
+        color: '#fff',
+        padding: '10px 24px',
+        borderRadius: '100px',
+        fontSize: '.88rem',
+        fontWeight: '600',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        zIndex: '9999',
+        boxShadow: '0 8px 32px rgba(124,92,252,0.3)',
+        animation: 'fadeInDown .3s ease-out',
+      });
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity .3s, transform .3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // Initialize data: try JSON file first, fallback to localStorage
+    async function initData() {
+      const fetched = await fetchSourceData();
+      const localRaw = localStorage.getItem(STORAGE_KEY);
+
+      if (fetched) {
+        sourceData = JSON.parse(JSON.stringify(fetched));
+
+        if (localRaw) {
+          // Local data exists — use it (preserves user edits)
+          try {
+            data = JSON.parse(localRaw);
+          } catch {
+            data = fetched;
+          }
+        } else {
+          // No local data — seed from JSON file
+          data = fetched;
+          saveData();
+        }
+      } else if (localRaw) {
+        // JSON file unavailable but local data exists
+        try {
+          data = JSON.parse(localRaw);
+        } catch {
+          data = { projects: [], focus: [], timeline: [], risks: [], pulse: {} };
+        }
+      } else {
+        // Nothing available — start empty
+        data = { projects: [], focus: [], timeline: [], risks: [], pulse: {} };
+        saveData();
+      }
+
+      renderAll();
+      updateSyncStatus();
+      initSidebar();
+      initTheme();
+      initLastUpdated();
+    }
+
+    initData();
+
+    /* ────────────────────────────────────────────────────
+       STATE
+    ──────────────────────────────────────────────────── */
+    let activeTab = 'health';
+    let activeProject = 'all'; // 'all' or project id
+    let timelineFilter = 'all';
+    let currentWeek = getCurrentWeekStr();
+
+    function getCurrentWeekStr() {
+      const now = new Date();
+      const yearStart = new Date(now.getFullYear(), 0, 1);
+      const weekNum = Math.ceil(((now - yearStart) / 86400000 + yearStart.getDay() + 1) / 7);
+      return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+    }
+
+    function getWeekLabel(weekStr) {
+      const [y, w] = weekStr.split('-W').map(Number);
+      // Calculate Monday of the ISO week
+      // ISO week 1 contains the first Thursday of the year
+      const jan4 = new Date(y, 0, 4); // Jan 4 is always in ISO week 1
+      const dayOfWeek = jan4.getDay() || 7; // convert Sunday=0 to 7
+      const mon1 = new Date(jan4);
+      mon1.setDate(jan4.getDate() - dayOfWeek + 1); // Monday of week 1
+      const monday = new Date(mon1);
+      monday.setDate(mon1.getDate() + (w - 1) * 7);
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const yearStr = friday.getFullYear();
+      return `Week ${w} (${fmt(monday)} – ${fmt(friday)}, ${yearStr})`;
+    }
+
+    function changeWeek(delta) {
+      let [y, w] = currentWeek.split('-W').map(Number);
+      w += delta;
+      if (w < 1) { y--; w = 52; }
+      if (w > 52) { y++; w = 1; }
+      currentWeek = `${y}-W${String(w).padStart(2, '0')}`;
+      renderPulse();
+    }
+
+    function goToCurrentWeek() {
+      currentWeek = getCurrentWeekStr();
+      renderPulse();
+    }
+
+    function uid() { return 'id_' + Math.random().toString(36).substr(2, 9); }
+
+    /* ────────────────────────────────────────────────────
+       RENDERERS
+    ──────────────────────────────────────────────────── */
+    function getProject(id) { return data.projects.find(p => p.id === id); }
+    function filteredProjects() { return activeProject === 'all' ? data.projects : data.projects.filter(p => p.id === activeProject); }
+
+    function renderProjectBar() {
+      const bar = document.getElementById('projectBar');
+      let html = `<div class="project-chip all-projects ${activeProject==='all'?'active':''}" data-pid="all" title="All Projects"><span class="chip-text">All Projects</span></div>`;
+      data.projects.forEach(p => {
+        html += `<div class="project-chip ${activeProject===p.id?'active':''}" data-pid="${p.id}" style="--chip-color:${p.color}" title="${p.name}"><span class="chip-text">${p.name}</span></div>`;
+      });
+      bar.innerHTML = html;
+      bar.querySelectorAll('.project-chip').forEach(chip => {
+        chip.onclick = () => { activeProject = chip.dataset.pid; renderAll(); };
+      });
+    }
+
+    /* ── Health ────────────── */
+    function renderHealth() {
+      const projects = filteredProjects();
+      // Summary
+      const strip = document.getElementById('summaryStrip');
+      const total = projects.length;
+      const greenCount = projects.filter(p => p.health === 'green').length;
+      const amberCount = projects.filter(p => p.health === 'amber').length;
+      const redCount = projects.filter(p => p.health === 'red').length;
+      const avgProgress = total ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / total) : 0;
+      strip.innerHTML = `
+        <div class="summary-card"><div class="big">${total}</div><div class="label">Projects</div></div>
+        <div class="summary-card"><div class="big" style="color:var(--green)">${greenCount}</div><div class="label">On Track</div></div>
+        <div class="summary-card"><div class="big" style="color:var(--amber)">${amberCount}</div><div class="label">At Risk</div></div>
+        <div class="summary-card"><div class="big" style="color:var(--red)">${redCount}</div><div class="label">Critical</div></div>
+        <div class="summary-card"><div class="big">${avgProgress}%</div><div class="label">Avg Progress</div></div>
+      `;
+
+      const grid = document.getElementById('healthGrid');
+      if (!projects.length) { grid.innerHTML = emptyState('No projects yet'); return; }
+      grid.innerHTML = projects.map(p => {
+        const badgeClass = p.health === 'green' ? 'badge-green' : p.health === 'amber' ? 'badge-amber' : 'badge-red';
+        const statusLabel = p.health === 'green' ? 'On Track' : p.health === 'amber' ? 'At Risk' : 'Critical';
+        const gradColor = p.health === 'green' ? 'var(--green)' : p.health === 'amber' ? 'var(--amber)' : 'var(--red)';
+        return `
+          <div class="card health-card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:${p.color};box-shadow:0 0 8px ${p.color}55"></span>${p.name}</div>
+              <span class="badge ${badgeClass}"><span class="badge-dot"></span>${statusLabel}</span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar"><div class="progress-fill" style="width:${p.progress}%;background:linear-gradient(90deg,${p.color},${gradColor})"></div></div>
+              <div class="progress-label">${p.progress}%</div>
+            </div>
+            <div class="metrics">
+              <div class="metric-item"><div class="metric-value" style="color:${p.budget>=80?'var(--green)':p.budget>=60?'var(--amber)':'var(--red)'}">${p.budget}%</div><div class="metric-label">Budget Health</div></div>
+              <div class="metric-item"><div class="metric-value" style="color:${p.quality>=80?'var(--green)':p.quality>=60?'var(--amber)':'var(--red)'}">${p.quality}%</div><div class="metric-label">Quality Score</div></div>
+              <div class="metric-item"><div class="metric-value" style="color:${p.velocity>=80?'var(--green)':p.velocity>=60?'var(--amber)':'var(--red)'}">${p.velocity}%</div><div class="metric-label">Velocity</div></div>
+              <div class="metric-item">
+                <div class="metric-value">${data.risks.filter(r=>r.projectId===p.id&&r.status!=='mitigated').length}</div>
+                <div class="metric-label">Open Risks</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+              <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">🗑</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Focus Areas ──────── */
+    function renderFocus() {
+      const projects = filteredProjects();
+      const container = document.getElementById('focusContainer');
+      if (!projects.length) { container.innerHTML = emptyState('No projects yet'); return; }
+      container.innerHTML = projects.map(p => {
+        const focusData = data.focus.find(f => f.projectId === p.id);
+        const items = focusData ? focusData.items : [];
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="dot" style="background:${p.color};box-shadow:0 0 8px ${p.color}55"></span>${p.name}</div>
+              <button class="btn btn-ghost btn-sm" onclick="openFocusModal('${p.id}')">✏️ Edit</button>
+            </div>
+            ${items.length ? `<ul class="focus-list">${items.map(it => `<li style="border-left-color:${p.color}">${it}</li>`).join('')}</ul>` : '<p style="color:var(--text-dim);font-size:.88rem">No focus items yet</p>'}
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Timeline ─────────── */
+    function renderTimeline() {
+      const projects = filteredProjects();
+      const pids = new Set(projects.map(p => p.id));
+      let items = data.timeline.filter(t => pids.has(t.projectId));
+      if (timelineFilter !== 'all') items = items.filter(t => t.phase === timelineFilter);
+      items.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const container = document.getElementById('timelineContainer');
+      if (!items.length) { container.innerHTML = emptyState('No activities to show'); return; }
+      container.innerHTML = items.map(t => {
+        const proj = getProject(t.projectId);
+        return `
+          <div class="timeline-item ${t.phase}">
+            <div class="timeline-date">${formatDate(t.date)} · <span style="color:${proj?.color||'var(--text-dim)'}">${proj?.name||'Unknown'}</span></div>
+            <div class="timeline-title">${t.title}</div>
+            <div class="timeline-desc">${t.desc}</div>
+            <div style="margin-top:8px;display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openTimelineModal('${t.id}')">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteTimeline('${t.id}')">🗑</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Filters
+      document.querySelectorAll('#timelineFilters .filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === timelineFilter);
+        btn.onclick = () => { timelineFilter = btn.dataset.filter; renderTimeline(); };
+      });
+    }
+
+    /* ── Risks ────────────── */
+    function renderRisks() {
+      const projects = filteredProjects();
+      const pids = new Set(projects.map(p => p.id));
+      const risks = data.risks.filter(r => pids.has(r.projectId));
+      const container = document.getElementById('riskContainer');
+      if (!risks.length) { container.innerHTML = emptyState('No risks identified — great job! 🎉'); return; }
+
+      // Sort: high first, then medium, then low; open first
+      const sevOrder = { high: 0, medium: 1, low: 2 };
+      const statusOrder = { open: 0, 'in-progress': 1, mitigated: 2 };
+      risks.sort((a, b) => sevOrder[a.severity] - sevOrder[b.severity] || statusOrder[a.status] - statusOrder[b.status]);
+
+      container.innerHTML = risks.map(r => {
+        const proj = getProject(r.projectId);
+        const statusBadge = r.status === 'open' ? 'badge-red' : r.status === 'in-progress' ? 'badge-amber' : 'badge-green';
+        return `
+          <div class="card risk-card">
+            <div class="risk-severity ${r.severity}">${r.severity === 'high' ? 'H' : r.severity === 'medium' ? 'M' : 'L'}</div>
+            <div>
+              <div class="risk-title">${r.title}</div>
+              <div class="risk-action">📋 ${r.action}</div>
+              <div class="risk-project-tag" style="color:${proj?.color||'var(--text-muted)'}">⤷ ${proj?.name||'Unknown'}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+              <span class="badge ${statusBadge}">${r.status}</span>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-ghost btn-sm" onclick="openRiskModal('${r.id}')">✏️</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteRisk('${r.id}')">🗑</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Pulse ────────────── */
+    function renderPulse() {
+      document.getElementById('weekLabel').textContent = getWeekLabel(currentWeek);
+      const weekData = data.pulse[currentWeek] || { ups: [], downs: [] };
+      const container = document.getElementById('pulseContainer');
+      container.innerHTML = `
+        <div class="pulse-col ups">
+          <h3>🟢 Wins & Highlights</h3>
+          ${weekData.ups.length ? weekData.ups.map((u, i) => `
+            <div class="pulse-item"><span class="pulse-item-text">${u}</span><button class="delete-btn" onclick="deletePulse('up',${i})">✕</button></div>
+          `).join('') : '<p style="color:var(--text-dim);font-size:.88rem">No wins recorded this week</p>'}
+        </div>
+        <div class="pulse-col downs">
+          <h3>🔴 Challenges & Blockers</h3>
+          ${weekData.downs.length ? weekData.downs.map((d, i) => `
+            <div class="pulse-item"><span class="pulse-item-text">${d}</span><button class="delete-btn" onclick="deletePulse('down',${i})">✕</button></div>
+          `).join('') : '<p style="color:var(--text-dim);font-size:.88rem">No challenges recorded this week</p>'}
+        </div>
+      `;
+    }
+
+    /* ── Helpers ───────────── */
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function emptyState(msg) {
+      return `<div class="empty-state"><div class="icon">📭</div><p>${msg}</p></div>`;
+    }
+
+    function renderAll() {
+      renderProjectBar();
+      renderHealth();
+      renderFocus();
+      renderTimeline();
+      renderRisks();
+      renderPulse();
+    }
+
+    /* ────────────────────────────────────────────────────
+       TABS
+    ──────────────────────────────────────────────────── */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        activeTab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-' + activeTab).classList.add('active');
+      };
+    });
+
+    /* ────────────────────────────────────────────────────
+       MODALS
+    ──────────────────────────────────────────────────── */
+    function openModal(html) {
+      document.getElementById('modalContent').innerHTML = html;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    function projectOptions(selectedId) {
+      return data.projects.map(p => `<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.name}</option>`).join('');
+    }
+
+    /* ── Project Modal ────── */
+    function openProjectModal(editId) {
+      const existing = editId ? getProject(editId) : null;
+      openModal(`
+        <h2>${existing ? 'Edit' : 'Add'} Project</h2>
+        <div class="form-group"><label>Project Name</label><input id="m_pname" value="${existing?.name||''}" placeholder="e.g. Auth Service" /></div>
+        <div class="form-group"><label>Health Status</label>
+          <select id="m_phealth">
+            <option value="green" ${existing?.health==='green'?'selected':''}>🟢 On Track</option>
+            <option value="amber" ${existing?.health==='amber'?'selected':''}>🟡 At Risk</option>
+            <option value="red" ${existing?.health==='red'?'selected':''}>🔴 Critical</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Progress (%)</label><input id="m_pprog" type="number" min="0" max="100" value="${existing?.progress||0}" /></div>
+        <div class="form-group"><label>Budget Health (%)</label><input id="m_pbudget" type="number" min="0" max="100" value="${existing?.budget||0}" /></div>
+        <div class="form-group"><label>Quality Score (%)</label><input id="m_pquality" type="number" min="0" max="100" value="${existing?.quality||0}" /></div>
+        <div class="form-group"><label>Velocity (%)</label><input id="m_pvel" type="number" min="0" max="100" value="${existing?.velocity||0}" /></div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProject('${editId||''}')">Save</button>
+        </div>
+      `);
+    }
+    function saveProject(editId) {
+      const name = document.getElementById('m_pname').value.trim();
+      if (!name) return;
+      const obj = {
+        name,
+        health: document.getElementById('m_phealth').value,
+        progress: Math.min(100, Math.max(0, parseInt(document.getElementById('m_pprog').value) || 0)),
+        budget: Math.min(100, Math.max(0, parseInt(document.getElementById('m_pbudget').value) || 0)),
+        quality: Math.min(100, Math.max(0, parseInt(document.getElementById('m_pquality').value) || 0)),
+        velocity: Math.min(100, Math.max(0, parseInt(document.getElementById('m_pvel').value) || 0)),
+      };
+      if (editId) {
+        const p = getProject(editId);
+        Object.assign(p, obj);
+      } else {
+        obj.id = uid();
+        obj.color = PROJECT_COLORS[data.projects.length % PROJECT_COLORS.length];
+        data.projects.push(obj);
+      }
+      saveData(); closeModal(); renderAll();
+    }
+    function deleteProject(id) {
+      if (!confirm('Delete this project and all related data?')) return;
+      data.projects = data.projects.filter(p => p.id !== id);
+      data.focus = data.focus.filter(f => f.projectId !== id);
+      data.timeline = data.timeline.filter(t => t.projectId !== id);
+      data.risks = data.risks.filter(r => r.projectId !== id);
+      if (activeProject === id) activeProject = 'all';
+      saveData(); renderAll();
+    }
+
+    /* ── Focus Modal ──────── */
+    function openFocusModal(projectId) {
+      const focusData = projectId ? data.focus.find(f => f.projectId === projectId) : null;
+      const items = focusData ? focusData.items.join('\n') : '';
+      openModal(`
+        <h2>Edit Focus Areas</h2>
+        <div class="form-group"><label>Project</label>
+          <select id="m_fproj" ${projectId ? 'disabled' : ''}>
+            ${projectId ? `<option value="${projectId}">${getProject(projectId)?.name}</option>` : projectOptions()}
+          </select>
+        </div>
+        <div class="form-group"><label>Focus Items (one per line, ~5 items recommended)</label>
+          <textarea id="m_fitems" rows="7" placeholder="Enter each focus area on a new line...">${items}</textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveFocus('${projectId||''}')">Save</button>
+        </div>
+      `);
+    }
+    function saveFocus(projectId) {
+      const pid = projectId || document.getElementById('m_fproj').value;
+      const items = document.getElementById('m_fitems').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const existing = data.focus.find(f => f.projectId === pid);
+      if (existing) { existing.items = items; }
+      else { data.focus.push({ id: uid(), projectId: pid, items }); }
+      saveData(); closeModal(); renderFocus();
+    }
+
+    /* ── Timeline Modal ───── */
+    function openTimelineModal(editId) {
+      const existing = editId ? data.timeline.find(t => t.id === editId) : null;
+      openModal(`
+        <h2>${existing ? 'Edit' : 'Add'} Activity</h2>
+        <div class="form-group"><label>Project</label><select id="m_tproj">${projectOptions(existing?.projectId)}</select></div>
+        <div class="form-group"><label>Phase</label>
+          <select id="m_tphase">
+            <option value="past" ${existing?.phase==='past'?'selected':''}>✅ Past (Completed)</option>
+            <option value="present" ${existing?.phase==='present'?'selected':''}>🔄 Present (In Progress)</option>
+            <option value="future" ${existing?.phase==='future'?'selected':''}>🔮 Future (Planned)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date</label><input id="m_tdate" type="date" value="${existing?.date||new Date().toISOString().split('T')[0]}" /></div>
+        <div class="form-group"><label>Title</label><input id="m_ttitle" value="${existing?.title||''}" placeholder="e.g. Sprint 5 Kickoff" /></div>
+        <div class="form-group"><label>Description</label><textarea id="m_tdesc" placeholder="Brief description of the activity...">${existing?.desc||''}</textarea></div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTimeline('${editId||''}')">Save</button>
+        </div>
+      `);
+    }
+    function saveTimeline(editId) {
+      const obj = {
+        projectId: document.getElementById('m_tproj').value,
+        phase: document.getElementById('m_tphase').value,
+        date: document.getElementById('m_tdate').value,
+        title: document.getElementById('m_ttitle').value.trim(),
+        desc: document.getElementById('m_tdesc').value.trim(),
+      };
+      if (!obj.title) return;
+      if (editId) {
+        const t = data.timeline.find(t => t.id === editId);
+        Object.assign(t, obj);
+      } else {
+        obj.id = uid();
+        data.timeline.push(obj);
+      }
+      saveData(); closeModal(); renderTimeline();
+    }
+    function deleteTimeline(id) {
+      data.timeline = data.timeline.filter(t => t.id !== id);
+      saveData(); renderTimeline();
+    }
+
+    /* ── Risk Modal ───────── */
+    function openRiskModal(editId) {
+      const existing = editId ? data.risks.find(r => r.id === editId) : null;
+      openModal(`
+        <h2>${existing ? 'Edit' : 'Add'} Risk</h2>
+        <div class="form-group"><label>Project</label><select id="m_rproj">${projectOptions(existing?.projectId)}</select></div>
+        <div class="form-group"><label>Severity</label>
+          <select id="m_rsev">
+            <option value="high" ${existing?.severity==='high'?'selected':''}>🔴 High</option>
+            <option value="medium" ${existing?.severity==='medium'?'selected':''}>🟡 Medium</option>
+            <option value="low" ${existing?.severity==='low'?'selected':''}>🟢 Low</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Risk Description</label><input id="m_rtitle" value="${existing?.title||''}" placeholder="Describe the risk..." /></div>
+        <div class="form-group"><label>Action Plan</label><textarea id="m_raction" placeholder="Mitigation steps...">${existing?.action||''}</textarea></div>
+        <div class="form-group"><label>Status</label>
+          <select id="m_rstatus">
+            <option value="open" ${existing?.status==='open'?'selected':''}>Open</option>
+            <option value="in-progress" ${existing?.status==='in-progress'?'selected':''}>In Progress</option>
+            <option value="mitigated" ${existing?.status==='mitigated'?'selected':''}>Mitigated</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveRisk('${editId||''}')">Save</button>
+        </div>
+      `);
+    }
+    function saveRisk(editId) {
+      const obj = {
+        projectId: document.getElementById('m_rproj').value,
+        severity: document.getElementById('m_rsev').value,
+        title: document.getElementById('m_rtitle').value.trim(),
+        action: document.getElementById('m_raction').value.trim(),
+        status: document.getElementById('m_rstatus').value,
+      };
+      if (!obj.title) return;
+      if (editId) {
+        const r = data.risks.find(r => r.id === editId);
+        Object.assign(r, obj);
+      } else {
+        obj.id = uid();
+        data.risks.push(obj);
+      }
+      saveData(); closeModal(); renderRisks();
+    }
+    function deleteRisk(id) {
+      data.risks = data.risks.filter(r => r.id !== id);
+      saveData(); renderRisks();
+    }
+
+    /* ── Pulse Modal ──────── */
+    function openPulseModal(type) {
+      const label = type === 'up' ? 'Win / Highlight' : 'Challenge / Blocker';
+      const projectSel = activeProject !== 'all'
+        ? ` for <strong>${getProject(activeProject)?.name}</strong>`
+        : '';
+      openModal(`
+        <h2>Add ${label}</h2>
+        <p style="color:var(--text-dim);font-size:.85rem;margin-bottom:16px">${getWeekLabel(currentWeek)}${projectSel}</p>
+        <div class="form-group"><label>${label}</label><textarea id="m_pulse" placeholder="What happened this week..." rows="3"></textarea></div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="savePulse('${type}')">Save</button>
+        </div>
+      `);
+    }
+    function savePulse(type) {
+      const text = document.getElementById('m_pulse').value.trim();
+      if (!text) return;
+      if (!data.pulse[currentWeek]) data.pulse[currentWeek] = { ups: [], downs: [] };
+      if (type === 'up') data.pulse[currentWeek].ups.push(text);
+      else data.pulse[currentWeek].downs.push(text);
+      saveData(); closeModal(); renderPulse();
+    }
+    function deletePulse(type, idx) {
+      const weekData = data.pulse[currentWeek];
+      if (!weekData) return;
+      if (type === 'up') weekData.ups.splice(idx, 1);
+      else weekData.downs.splice(idx, 1);
+      saveData(); renderPulse();
+    }
+
+    /* ────────────────────────────────────────────────────
+       INIT (renderAll is called by initData above)
+    ──────────────────────────────────────────────────── */
+
+    /* ────────────────────────────────────────────────────
+       SIDEBAR & THEME & UPDATE DATE ACTIONS
+    ──────────────────────────────────────────────────── */
+    function toggleSidebar() {
+      const app = document.getElementById('app');
+      const btn = document.getElementById('sidebarToggleBtn');
+      if (!app || !btn) return;
+      const isCollapsed = app.classList.toggle('collapsed-sidebar');
+      localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+      btn.textContent = isCollapsed ? '▶' : '◀';
+      btn.title = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
+    }
+
+    function initSidebar() {
+      const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+      const app = document.getElementById('app');
+      const btn = document.getElementById('sidebarToggleBtn');
+      if (app && btn) {
+        if (isCollapsed) {
+          app.classList.add('collapsed-sidebar');
+          btn.textContent = '▶';
+          btn.title = 'Expand Sidebar';
+        } else {
+          app.classList.remove('collapsed-sidebar');
+          btn.textContent = '◀';
+          btn.title = 'Collapse Sidebar';
+        }
+      }
+    }
+
+    function updateLastUpdated(val) {
+      if (!data) return;
+      data.lastUpdated = val;
+      saveData();
+      updateSyncStatus();
+    }
+
+    function initLastUpdated() {
+      const input = document.getElementById('lastUpdatedInput');
+      if (input) {
+        input.value = data.lastUpdated || '';
+      }
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      updateThemeButton(isLight);
+    }
+
+    function updateThemeButton(isLight) {
+      const btn = document.getElementById('themeToggleBtn');
+      if (!btn) return;
+      const icon = btn.querySelector('.theme-icon');
+      const text = btn.querySelector('.theme-text');
+      if (isLight) {
+        if (icon) icon.textContent = '🌙';
+        if (text) text.textContent = 'Dark Mode';
+        btn.title = 'Switch to Dark Mode';
+      } else {
+        if (icon) icon.textContent = '☀️';
+        if (text) text.textContent = 'Light Mode';
+        btn.title = 'Switch to Light Mode';
+      }
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      const isLight = savedTheme === 'light' || (!savedTheme && prefersLight);
+      if (isLight) {
+        document.body.classList.add('light-theme');
+      } else {
+        document.body.classList.remove('light-theme');
+      }
+      updateThemeButton(isLight);
+    }
+
+    // Keyboard shortcut: Escape closes modal
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  </script>
+</body>
+</html>
